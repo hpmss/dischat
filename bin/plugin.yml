@@ -1,0 +1,13 @@
+main: hpms.discordchat.chat.DiscordChat
+name: DiscordChat
+author: GitHub/hpmss
+version: 1.0
+description: Chatting in channels.
+commands:
+      discordchat:
+         description: Main command.
+         usage: /discordchat
+         
+permissions:
+      discordchat.override:
+         default: op

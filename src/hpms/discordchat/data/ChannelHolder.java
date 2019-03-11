@@ -19,8 +19,9 @@ import hpms.discordchat.utils.Validator;
 public class ChannelHolder {
 	
 	private static HashMap<String,Channel> cachedChannel = new HashMap<String,Channel>();
-	private static List<String> cachedLeader = new ArrayList<String>();
+	private static HashMap<UUID,String> cachedPlayerCurrentChannel = new HashMap<UUID,String>();
 	
+	private static List<String> cachedLeader = new ArrayList<String>();
 	private static ConfigurationSection storageSection = FileManager.getConfigurationSection("storage", "storage");
 	private static StringBuilder builder = new StringBuilder();
 	
@@ -28,6 +29,8 @@ public class ChannelHolder {
 		Set<String> channelSet = storageSection.getKeys(false);
 		for(String channel : channelSet) {
 			String uuid = storageSection.getConfigurationSection(channel).getString("leader").split("#")[0];
+			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection("member").getValues(false);
+			cachedPlayerCurrentChannel.put(UUID.fromString(uuid),channel);
 			cachedLeader.add(uuid);
 		}
 	}
@@ -57,10 +60,17 @@ public class ChannelHolder {
 		}
 		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
 		Player leader = Bukkit.getPlayer(UUID.fromString(channelSection.getString("leader").split("#")[0]));
-		Map<String,String> memberList = (Map<String, String>) channelSection.get("list");
-		channel = ChannelHandler.createNewChannel(name, leader);
+		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection("list").getValues(false);
+		channel = ChannelHandler.createNewChannel(name, leader,true);
 		channel.overrideMember(memberList);
 		return channel;
+	}
+	
+	public static String getPlayerCurrentChannel(Player player) {
+		if(cachedPlayerCurrentChannel.containsKey(player.getUniqueId())) {
+			return cachedPlayerCurrentChannel.get(player.getUniqueId());
+		}
+		return "";
 	}
 	
 	public static boolean isChannelExisted(String name) {

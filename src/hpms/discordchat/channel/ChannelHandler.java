@@ -13,8 +13,8 @@ public class ChannelHandler extends ChannelPrefix {
 		super(name, leader,perm);
 	}
 	
-	public static Channel createNewChannel(String name,Player leader) {
-		if(ChannelHolder.isPlayerLeader(leader))  {
+	public static Channel createNewChannel(String name,Player leader,boolean getFlag) {
+		if(ChannelHolder.isPlayerLeader(leader) && getFlag == false)  {
 			leader.sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
 			return null;
 		}

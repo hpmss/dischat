@@ -41,7 +41,7 @@ public class OnCommand implements CommandExecutor{
 					sender.sendMessage(ChatColor.RED + "Create from console must specify a leader player");
 				}
 				else{
-					ChannelHandler.createNewChannel(args[1], (Player) sender);
+					ChannelHandler.createNewChannel(args[1], (Player) sender,true);
 					sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel created.");
 				}
 				
@@ -63,7 +63,7 @@ public class OnCommand implements CommandExecutor{
 		else if(args.length == 3) {
 			if(args[0].equalsIgnoreCase("create")) {
 				if(sender instanceof ConsoleCommandSender) {
-					ChannelHandler.createNewChannel(args[1], Bukkit.getPlayer(args[2]));
+					ChannelHandler.createNewChannel(args[1], Bukkit.getPlayer(args[2]),true);
 					sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel created.");
 				}
 			}

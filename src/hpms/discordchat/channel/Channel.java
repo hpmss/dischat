@@ -29,9 +29,11 @@ public abstract class Channel {
 		ChannelHolder.put(this);
 	}
 	
-	public void overrideMember(Map<String,String> memberList) {
-		for(Entry<String,String> entry : memberList.entrySet()) {
-			member.put(UUID.fromString(entry.getKey()), entry.getValue());
+	public void overrideMember(Map<String,Object> memberList) {
+		if(memberList.size() != 0) {
+			for(Entry<String,Object> entry : memberList.entrySet()) {
+				member.put(UUID.fromString(entry.getKey()), entry.getValue().toString());
+			}
 		}
 	}
 	

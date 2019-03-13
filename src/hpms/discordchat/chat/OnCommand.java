@@ -47,7 +47,7 @@ public class OnCommand implements CommandExecutor{
 			}
 			else if(args[0].equalsIgnoreCase("join")) {
 				if(sender instanceof Player) {
-					ChannelHandler.joinChannel((Player)sender);
+					ChannelHandler.joinChannel((Player)sender,args[1]);
 					sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel joined.");
 				}else {
 					sender.sendMessage(ChatColor.RED + "Joining a channel for console is currently not supported.");

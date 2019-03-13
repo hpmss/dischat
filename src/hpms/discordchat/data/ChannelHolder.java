@@ -79,10 +79,17 @@ public class ChannelHolder {
 		return "";
 	}
 	
-	public static void setPlayerCurrentChannel(Player player,String channel) {
-		if(isChannelExisted(channel)) {
-			cachedPlayerCurrentChannel.put(player.getUniqueId(),channel);
-		}
+	public static boolean setPlayerCurrentChannel(Player player,String channel) {
+		if(!isChannelExisted(channel)) return false;
+		String old = getPlayerCurrentChannel(player);
+		if(old.equalsIgnoreCase(channel)) return false;
+		
+		cachedPlayerCurrentChannel.put(player.getUniqueId(), channel);
+		Channel oldChannel = getChannel(old);
+		Channel newChannel = getChannel(channel);
+		oldChannel.removeMember(player);
+		newChannel.addMember(player);
+		return true;
 	}
 	
 	public static boolean isChannelExisted(String name) {

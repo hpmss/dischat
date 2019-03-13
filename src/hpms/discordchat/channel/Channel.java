@@ -38,8 +38,17 @@ public abstract class Channel {
 	}
 	
 	public void addMember(Player member) {
+		if(member.getUniqueId().equals(this.leader.getUniqueId())) return;
 		this.member.put(member.getUniqueId(),Prefix.getInitialPrefix(this));
 		ChannelHolder.put(this);
+	}
+	
+	public void removeMember(Player member) {
+		if(member.getUniqueId().equals(this.leader.getUniqueId())) return;
+		if(this.member.containsKey(member.getUniqueId())) {
+			this.member.remove(member.getUniqueId());
+			ChannelHolder.put(this);
+		}
 	}
 	
 	public void setChannelName(String name) {

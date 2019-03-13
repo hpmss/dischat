@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,8 +21,8 @@ public class ChannelHolder {
 	
 	private static HashMap<String,Channel> cachedChannel = new HashMap<String,Channel>();
 	private static HashMap<UUID,String> cachedPlayerCurrentChannel = new HashMap<UUID,String>();
-	
 	private static List<String> cachedLeader = new ArrayList<String>();
+	
 	private static ConfigurationSection storageSection = FileManager.getConfigurationSection("storage", "storage");
 	private static StringBuilder builder = new StringBuilder();
 	
@@ -29,7 +30,12 @@ public class ChannelHolder {
 		Set<String> channelSet = storageSection.getKeys(false);
 		for(String channel : channelSet) {
 			String uuid = storageSection.getConfigurationSection(channel).getString("leader").split("#")[0];
-			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection("member").getValues(false);
+			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection("list").getValues(false);
+			if(memberList.size() != 0) {
+				for(Entry<String,Object> entry : memberList.entrySet()) {
+					cachedPlayerCurrentChannel.put(UUID.fromString(entry.getKey()),channel);
+				}
+			}
 			cachedPlayerCurrentChannel.put(UUID.fromString(uuid),channel);
 			cachedLeader.add(uuid);
 		}
@@ -51,11 +57,11 @@ public class ChannelHolder {
 		FileManager.saveConfiguration("storage");
 	}
 	
+	
 	public static Channel getChannel(String name) {
 		Validator.isTrue(isChannelExisted(name));
 		Channel channel = cachedChannel.get(name);
 		if(channel != null) {
-			channel.reloadChannel();
 			return channel;
 		}
 		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
@@ -71,6 +77,12 @@ public class ChannelHolder {
 			return cachedPlayerCurrentChannel.get(player.getUniqueId());
 		}
 		return "";
+	}
+	
+	public static void setPlayerCurrentChannel(Player player,String channel) {
+		if(isChannelExisted(channel)) {
+			cachedPlayerCurrentChannel.put(player.getUniqueId(),channel);
+		}
 	}
 	
 	public static boolean isChannelExisted(String name) {

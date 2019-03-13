@@ -5,10 +5,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 
-import hpms.discordchat.channel.Channel;
 import hpms.discordchat.channel.ChannelHandler;
 import hpms.discordchat.data.ChannelHolder;
 import net.md_5.bungee.api.ChatColor;
@@ -27,9 +25,6 @@ public class OnCommand implements CommandExecutor{
 				sender.sendMessage(ChatColor.YELLOW + "Channel list: " + ChannelHolder.getChannelList());
 			}
 			else if(args[0].equalsIgnoreCase("debug")) {
-				Channel channel = ChannelHandler.getChannel("Global");
-				Log.info(channel.getChannelName());
-				Log.info(channel.getMemberList());
 			}
 			else if(args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("remove")) {
 				sender.sendMessage(ChatColor.YELLOW + "You must specify a name");

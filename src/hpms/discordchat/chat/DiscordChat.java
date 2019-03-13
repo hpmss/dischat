@@ -17,7 +17,6 @@ public class DiscordChat extends JavaPlugin{
 	
 	public void initDiscordChat() {
 		FileManager.initFileManager(this);
-		System.out.print("Test");
 		this.getServer().getPluginManager().registerEvents(new EventListener(),this);
 		this.getCommand("discordchat").setExecutor(new OnCommand());
 	}

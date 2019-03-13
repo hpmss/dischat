@@ -33,8 +33,12 @@ public class ChannelHandler extends ChannelPrefix {
 		return ChannelHolder.getChannel(name);
 	}
 	
+	public static String getPlayerCurrentChannel(Player player) {
+		return ChannelHolder.getPlayerCurrentChannel(player);
+	}
+	
 	public static void joinChannel(Player player) {
-		
+		ChannelHolder.setPlayerCurrentChannel(player,ChannelHolder.getPlayerCurrentChannel(player));
 	}
 
 }

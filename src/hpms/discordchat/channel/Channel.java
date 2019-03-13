@@ -43,11 +43,22 @@ public abstract class Channel {
 	}
 	
 	public void setChannelName(String name) {
+		ChannelHolder.remove(this.name);
 		this.name = name;
+		ChannelHolder.put(this);
+	}
+	
+	public void setLeader(Player leader) {
+		this.leader = leader;
+		ChannelHolder.put(this);
 	}
 	
 	public String getChannelName() {
 		return name;
+	}
+	
+	public Player getLeaderPlayer() {
+		return this.leader;
 	}
 	
 	public String getLeader() {
@@ -58,11 +69,7 @@ public abstract class Channel {
 		return member;
 	}
 	
-	public void reloadChannel() {
-		
-	}
-	
-	public abstract void setPrefix(Player member);
+	public abstract void setPrefix(Player member,String prefix);
 	public abstract String getPrefix(Player member);
 
 }

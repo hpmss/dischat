@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import hpms.discordchat.data.ChannelHolder;
@@ -13,19 +15,23 @@ import hpms.discordchat.utils.Validator;
 
 public abstract class Channel {
 	
-	protected Player leader;
+	protected UUID leader;
 	protected String name;
 	protected HashMap<UUID,String> member;
 	
 	
-	public Channel(String name,Player leader,boolean perm) {
+	public Channel(String name,UUID leader,boolean getFlag) {
 		this.name = name;
 		this.member = new HashMap<UUID,String>();
 		this.leader = leader;
-		if(perm == false) {
-			Validator.isTrue(!ChannelHolder.isChannelExisted(name));
+		OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
+		if(player.isOnline()) {
+			if(!player.getPlayer().hasPermission("discordchat.overridechannel")) {
+				Validator.isTrue(!ChannelHolder.isChannelExisted(name));
+			}
 		}
-		Prefix.put(this);
+		Prefix.put(this,getFlag);
+		this.member.put(this.leader, Prefix.getLeaderPrefix(this));
 		ChannelHolder.put(this);
 	}
 	
@@ -38,15 +44,18 @@ public abstract class Channel {
 	}
 	
 	public void addMember(Player member) {
-		if(member.getUniqueId().equals(this.leader.getUniqueId())) return;
-		this.member.put(member.getUniqueId(),Prefix.getInitialPrefix(this));
+		String prefix = Prefix.getPrefix(member, this);
+		if(prefix == null) {
+			prefix = Prefix.getInitialPrefix(this);
+		}
+		this.member.put(member.getUniqueId(),prefix);
 		ChannelHolder.put(this);
+		Prefix.update(this,member,prefix);
 	}
 	
-	public void removeMember(Player member) {
-		if(member.getUniqueId().equals(this.leader.getUniqueId())) return;
-		if(this.member.containsKey(member.getUniqueId())) {
-			this.member.remove(member.getUniqueId());
+	public void removeMember(UUID uuid) {
+		if(this.member.containsKey(uuid)) {
+			this.member.remove(uuid);
 			ChannelHolder.put(this);
 		}
 	}
@@ -58,7 +67,7 @@ public abstract class Channel {
 	}
 	
 	public void setLeader(Player leader) {
-		this.leader = leader;
+		this.leader = leader.getUniqueId();
 		ChannelHolder.put(this);
 	}
 	
@@ -66,12 +75,8 @@ public abstract class Channel {
 		return name;
 	}
 	
-	public Player getLeaderPlayer() {
+	public UUID getLeader() {
 		return this.leader;
-	}
-	
-	public String getLeader() {
-		return leader.getUniqueId() + "#" + Prefix.getLeaderPrefix(this);
 	}
 	
 	public HashMap<UUID,String> getMemberList() {
@@ -79,6 +84,8 @@ public abstract class Channel {
 	}
 	
 	public abstract void setPrefix(Player member,String prefix);
+	public abstract void setChannelChatPrefix(String prefix);
 	public abstract String getPrefix(Player member);
+	public abstract String getChannelChatPrefix();
 
 }

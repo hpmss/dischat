@@ -60,6 +60,7 @@ public class ChannelHolder {
 		save();
 	}
 	
+	//Error somewhere here
 	public static Channel getChannel(String name) {
 		if(name.length() == 0) {
 			return null;

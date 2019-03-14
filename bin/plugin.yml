@@ -9,5 +9,7 @@ commands:
          usage: /discordchat
          
 permissions:
-      discordchat.override:
+      discordchat.overridechannel:
+         default: op
+      discordchat.multiplechannel:
          default: op

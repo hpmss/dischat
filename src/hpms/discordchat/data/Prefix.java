@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
 
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.utils.FileManager;
@@ -60,10 +60,10 @@ public class Prefix {
 		save();
 	}
 	
-	public static void update(Channel channel,Player member,String prefix ) {
+	public static void update(Channel channel,UUID member,String prefix ) {
 		ConfigurationSection section = prefixSection.getConfigurationSection(channel.getChannelName());
 		ConfigurationSection rank = section.getConfigurationSection("rank");
-		rank.set(member.getUniqueId().toString(), prefix);
+		rank.set(member.toString(), prefix);
 		save();
 	}
 	
@@ -85,15 +85,31 @@ public class Prefix {
 		return prefixSection.getConfigurationSection(channel.getChannelName()).isConfigurationSection(prefix);
 	}
 	
-	public static String getPrefix(Player player,Channel channel) {
+	public static String getPrefix(UUID player,Channel channel) {
 		if(!ChannelHolder.isChannelExisted(channel.getChannelName())) return null;
 		ConfigurationSection rank = prefixSection.getConfigurationSection(channel.getChannelName()).getConfigurationSection("rank");
 		Validator.isNotNull(rank);
 		Map<String,Object> prefixRank = rank.getValues(false);
-		if(prefixRank.containsKey(player.getUniqueId().toString())) {
-			return prefixRank.get(player.getUniqueId().toString()).toString();
+		if(prefixRank.containsKey(player.toString())) {
+			return prefixRank.get(player.toString()).toString();
 		}
 		return null;
+	}
+	
+	public static void addPrefix(String name,String prefix,boolean makeDefault) {
+		if(prefix.length() != 0) {
+			ConfigurationSection memberConfig = prefixSection.getConfigurationSection(name).getConfigurationSection("member");
+			memberConfig.createSection(prefix);
+			memberConfig.getConfigurationSection(prefix).set("permission", new ArrayList<String>());
+			//Move current default prefix player to new prefix [To-Do] 
+			if(makeDefault == true) {
+				String currentDefault = cachedInitPrefix.get(name);
+				memberConfig.getConfigurationSection(currentDefault).set("default",null);
+				memberConfig.getConfigurationSection(prefix).set("default", true);
+				cachedInitPrefix.put(name,prefix);
+			}
+		}
+		save();
 	}
 	
 	public static void setChannelChatPrefix(String channel,String prefix) {

@@ -1,9 +1,10 @@
 package hpms.discordchat.chat;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,23 +13,44 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.channel.ChannelHandler;
+import hpms.discordchat.data.ChannelHolder;
 
 public class EventListener implements Listener{
 	
+	private static String PLAYER_NAME = "%1$s";
+	private static String PLAYER_MESSAGE = "%2$s";
+	private static String FORMAT = "[" + "%s" + ChatColor.RESET + "]";
+	
 	@EventHandler
 	public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent e) {
-		Set<Player> recipient = e.getRecipients();
+		List<Entity> players = getNearbyPlayers(e.getPlayer(),10,10,10);
+		e.getRecipients().clear();
+		e.getRecipients().add(e.getPlayer());
+		for(Entity p : players) {
+			e.getRecipients().add((Player)p);
+		}
 		Channel channel = ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId());
-		e.setFormat("[" + ChatColor.translateAlternateColorCodes('&',channel.getChannelChatPrefix()) + "]" + "[%1$s] %2$s");
-		Log.info(channel.getLeader());
+		FORMAT = String.format(FORMAT, ChatColor.translateAlternateColorCodes('&', channel.getChannelChatPrefix()));
+		e.setFormat( FORMAT + ChatColor.RESET + PLAYER_NAME + ": " + PLAYER_MESSAGE );
 	}
 	
 	@EventHandler
 	public void onPlayerJoinEvent(PlayerJoinEvent e) {
 		if(ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId()) == null) {
-			Log.info("No current channel");
-			ChannelHandler.joinChannel(e.getPlayer(), "Global");
+			ChannelHandler.joinChannel(e.getPlayer(), ChannelHolder.DEFAULT_CHANNEL);
 		}
+	}
+	
+	
+	public List<Entity> getNearbyPlayers(Player p,double x,double y,double z) {
+		List<Entity> entities = p.getNearbyEntities(x, y, z);
+		List<Entity> players = new ArrayList<Entity>();
+		for(Entity entity : entities) {
+			if(entity instanceof Player) {
+				players.add( entity);
+			}
+		}
+		return players;
 	}
 
 }

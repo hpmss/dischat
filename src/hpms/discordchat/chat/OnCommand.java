@@ -14,6 +14,7 @@ import net.md_5.bungee.api.ChatColor;
 
 public class OnCommand implements CommandExecutor{
 	
+	@SuppressWarnings("deprecation")
 	public boolean onCommand(CommandSender sender,Command cmd,String label,String[] args) {
 		if(args.length == 0) {
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat list - Get a list of channels.");
@@ -21,12 +22,14 @@ public class OnCommand implements CommandExecutor{
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat remove <name> - Remove a channel .");
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> - Join a channel .");
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat prefix <name> <prefix> - Set a channel prefix ( leader required ) .");
+			sender.sendMessage(ChatColor.YELLOW + "/discordchat prefix <name> <playername> <prefix> - Set a channel's player prefix ( leader required ) .");
 		}
 		else if(args.length == 1) {
 			if(args[0].equalsIgnoreCase("list")) {
 				sender.sendMessage(ChatColor.YELLOW + "Channel list: " + ChannelHolder.getChannelList());
 			}
 			else if(args[0].equalsIgnoreCase("debug")) {
+				ChannelHolder.debug();
 			}
 			else if(args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("remove")) {
 				sender.sendMessage(ChatColor.YELLOW + "You must specify a name");
@@ -67,12 +70,25 @@ public class OnCommand implements CommandExecutor{
 		else if(args.length == 3) {
 			if(args[0].equalsIgnoreCase("create")) {
 				if(sender instanceof ConsoleCommandSender) {
-					ChannelHandler.createNewChannel(args[1], Bukkit.getPlayer(args[2]).getUniqueId(),true);
-					sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel created.");
+					Channel channel = ChannelHandler.createNewChannel(args[1], Bukkit.getPlayer(args[2]).getUniqueId(),true);
+					if(channel != null) {
+						sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel created.");
+					}
 				}
 			}
 			else if(args[0].equalsIgnoreCase("prefix")) {
-				ChannelHandler.setChannelChatPrefix(args[1], args[2]);
+				boolean b = ChannelHandler.setChannelChatPrefix(((Player) sender).getUniqueId(),args[1], args[2]);
+				if(b) {
+					sender.sendMessage(ChatColor.YELLOW + "Channel prefix setted to \'" + args[2] + "\'.");
+				}
+				else {
+					sender.sendMessage(ChatColor.YELLOW + "You are not a leader of this channel.");
+				}
+			}
+		}
+		else if(args.length == 4) {
+			if(args[0].equalsIgnoreCase("prefix")) {
+				ChannelHandler.setChannelPlayerPrefix(((Player) sender).getUniqueId(), Bukkit.getOfflinePlayer(args[2]).getUniqueId(), args[1], args[3]);
 			}
 		}
 		

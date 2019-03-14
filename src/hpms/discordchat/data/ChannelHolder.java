@@ -26,6 +26,8 @@ public class ChannelHolder {
 	private static ConfigurationSection storageSection = FileManager.getConfigurationSection("storage", "storage");
 	private static StringBuilder builder = new StringBuilder();
 	
+	public static String DEFAULT_CHANNEL = FileManager.getConfig().getString("default-join-server-channel");
+	
 	public static void initChannelHolder() {
 		Set<String> channelSet = storageSection.getKeys(false);
 		for(String channel : channelSet) {
@@ -55,12 +57,23 @@ public class ChannelHolder {
 		cachedChannel.put(channel.getChannelName(), channel);
 	}
 	
+	public static void cacheLeader(String leader) {
+		cachedLeader.add(leader);
+	}
+	
 	public static void remove(String name) {
+		Channel channel = getChannel(name);
+		Channel global = getChannel(DEFAULT_CHANNEL);
+		for(UUID member : channel.getMemberList().keySet()) {
+			global.addMember(member);
+			cachedPlayerCurrentChannel.put(member, DEFAULT_CHANNEL);
+		}
+		cachedLeader.remove(channel.getLeader().toString());
+		cachedChannel.remove(name);
 		storageSection.set(name,null);
 		save();
 	}
 	
-	//Error somewhere here
 	public static Channel getChannel(String name) {
 		if(name.length() == 0) {
 			return null;
@@ -71,9 +84,9 @@ public class ChannelHolder {
 			return channel;
 		}
 		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
+		Validator.isNotNull(channelSection,"channel \'" + name + "\' doesnt exist.");
 		UUID leader = UUID.fromString(channelSection.getString("leader"));
 		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection("list").getValues(false);
-		Log.info(memberList);
 		channel = new ChannelHandler(name, leader,true);
 		channel.overrideMember(memberList);
 		cacheChannel(channel);
@@ -96,7 +109,7 @@ public class ChannelHolder {
 			currentChannel.removeMember(player.getUniqueId());
 		}
 		Channel newChannel = getChannel(channel);
-		newChannel.addMember(player);
+		newChannel.addMember(player.getUniqueId());
 		cachedPlayerCurrentChannel.put(player.getUniqueId(), channel);
 		return 0;
 	}
@@ -127,6 +140,12 @@ public class ChannelHolder {
 	
 	private static void save() {
 		FileManager.saveConfiguration("storage");
+	}
+	
+	public static void debug() {
+		Log.info(cachedChannel);
+		Log.info(cachedPlayerCurrentChannel);
+		Log.info(cachedLeader);
 	}
 	
 }

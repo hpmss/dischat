@@ -7,7 +7,6 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 
 import hpms.discordchat.data.ChannelHolder;
 import hpms.discordchat.data.Prefix;
@@ -41,14 +40,15 @@ public abstract class Channel {
 				member.put(UUID.fromString(entry.getKey()), entry.getValue().toString());
 			}
 		}
+		ChannelHolder.put(this);
 	}
 	
-	public void addMember(Player member) {
+	public void addMember(UUID member) {
 		String prefix = Prefix.getPrefix(member, this);
 		if(prefix == null) {
 			prefix = Prefix.getInitialPrefix(this);
 		}
-		this.member.put(member.getUniqueId(),prefix);
+		this.member.put(member,prefix);
 		ChannelHolder.put(this);
 		Prefix.update(this,member,prefix);
 	}
@@ -66,8 +66,8 @@ public abstract class Channel {
 		ChannelHolder.put(this);
 	}
 	
-	public void setLeader(Player leader) {
-		this.leader = leader.getUniqueId();
+	public void setLeader(UUID leader) {
+		this.leader = leader;
 		ChannelHolder.put(this);
 	}
 	
@@ -83,9 +83,11 @@ public abstract class Channel {
 		return member;
 	}
 	
-	public abstract void setPrefix(Player member,String prefix);
-	public abstract void setChannelChatPrefix(String prefix);
-	public abstract String getPrefix(Player member);
+	public abstract boolean setPrefix(UUID setter,UUID member,String prefix);
+	public abstract boolean setChannelChatPrefix(UUID setter,String prefix);
+	public abstract void addPrefix(UUID setter,String prefix,boolean makeDefault);
+	public abstract void removePrefix(UUID setter,String prefix);
+	public abstract String getPrefix(UUID member);
 	public abstract String getChannelChatPrefix();
 
 }

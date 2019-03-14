@@ -1,5 +1,10 @@
 package hpms.discordchat.utils;
 
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+
 public class Validator {
 	
 	public static boolean isNotNull(Object obj) {
@@ -9,6 +14,31 @@ public class Validator {
 		else {
 			throw new IllegalArgumentException("Object is null");
 		}
+	}
+	
+	public static boolean isNotNull(Object obj,String message) {
+		if(!obj.equals(null)) {
+			return true;
+		}else {
+			throw new IllegalArgumentException(message);
+		}
+	}
+	
+	public static boolean isPlayerOnline(UUID uuid) {
+		OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+		if(!player.equals(null)) {
+			if(player.isOnline()) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		return false;
+	}
+	
+	public static boolean isPlayerExistInServer(UUID uuid) {
+		return false;
 	}
 	
 	public static boolean isTrue(boolean prep) {

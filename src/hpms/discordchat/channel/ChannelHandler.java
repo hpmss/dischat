@@ -29,20 +29,29 @@ public class ChannelHandler extends ChannelPrefix {
 		OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
 		if(ChannelHolder.isPlayerLeader(leader))  {
 			if(player.isOnline()) {
-				player.getPlayer().sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
+				if(!player.getPlayer().hasPermission("discordchat.multiplechannel")) {
+					player.getPlayer().sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
+					return null;
+				}
 			}
-			return null;
 		}
 		if(getPlayerCurrentChannel(leader) != null) {
 			getPlayerCurrentChannel(leader).removeMember(leader);
 		}
 		Channel channel = new ChannelHandler(name,leader,getFlag);
 		ChannelHolder.cacheChannel(channel);
+		ChannelHolder.cacheLeader(leader.toString());
 		return channel;
 	}
 	
-	public static void setChannelChatPrefix(String channel,String prefix) {
-		Prefix.setChannelChatPrefix(channel, prefix);
+	public static boolean setChannelChatPrefix(UUID setter,String name,String prefix) {
+		Channel channel = getChannelByName(name);
+		return channel.setChannelChatPrefix(setter,prefix);
+	}
+	
+	public static boolean setChannelPlayerPrefix(UUID setter,UUID member,String name,String prefix) {
+		Channel channel = getChannelByName(name);
+		return channel.setPrefix(setter, member, prefix);
 	}
 	
 	public static void removeChannel(String name) {

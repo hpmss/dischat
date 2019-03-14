@@ -2,8 +2,6 @@ package hpms.discordchat.channel;
 
 import java.util.UUID;
 
-import org.bukkit.entity.Player;
-
 import hpms.discordchat.data.Prefix;
 
 public abstract class ChannelPrefix extends Channel{
@@ -12,19 +10,38 @@ public abstract class ChannelPrefix extends Channel{
 		super(name, leader,getFlag);
 	}
 	
-	public void setPrefix(Player member,String prefix) {
-		if(!Prefix.isPrefix(prefix, this)) return;
-		if(this.member.containsKey(member.getUniqueId())) {
-			this.member.put(member.getUniqueId(),prefix);
-			Prefix.update(this, member, prefix);
+	public boolean setPrefix(UUID setter,UUID member,String prefix) {
+		if(!Prefix.isPrefix(prefix, this)) return false;
+		if(!setter.equals(this.leader)) return false;
+		if(this.member.containsKey(member)) {
+			this.member.put(member,prefix);
+		}
+		Prefix.update(this, member, prefix);
+		return true;
+	}
+	
+	public boolean setChannelChatPrefix(UUID setter,String prefix) {
+		if(setter.equals(this.leader)) {
+			Prefix.setChannelChatPrefix(this.getChannelName(), prefix);
+			return true;
+		}
+		return false;
+	}
+	
+	public void addPrefix(UUID setter,String prefix,boolean makeDefault) {
+		if(setter.equals(this.leader)) {
+			Prefix.addPrefix(this.getChannelName(), prefix,makeDefault);
 		}
 	}
 	
-	public void setChannelChatPrefix(String prefix) {
-		Prefix.setChannelChatPrefix(this.getChannelName(), prefix);
+	public void removePrefix(UUID setter,String prefix) {
+		if(!Prefix.isPrefix(prefix, this)) return;
+		if(setter.equals(this.leader)) {
+			
+		}
 	}
 	
-	public String getPrefix(Player member) {
+	public String getPrefix(UUID member) {
 		return Prefix.getPrefix(member, this);
 	}
 	

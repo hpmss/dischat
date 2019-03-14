@@ -23,15 +23,19 @@ public class EventListener implements Listener{
 	
 	@EventHandler
 	public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent e) {
-		List<Entity> players = getNearbyPlayers(e.getPlayer(),10,10,10);
-		e.getRecipients().clear();
-		e.getRecipients().add(e.getPlayer());
-		for(Entity p : players) {
-			e.getRecipients().add((Player)p);
+		if(ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId()).getChannelName() != ChannelHolder.DEFAULT_CHANNEL) {
+			List<Entity> players = getNearbyPlayers(e.getPlayer(),10,10,10);
+			e.getRecipients().clear();
+			e.getRecipients().add(e.getPlayer());
+			for(Entity p : players) {
+				e.getRecipients().add((Player)p);
+			}
 		}
+		
 		Channel channel = ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId());
 		FORMAT = String.format(FORMAT, ChatColor.translateAlternateColorCodes('&', channel.getChannelChatPrefix()));
-		e.setFormat( FORMAT + ChatColor.RESET + PLAYER_NAME + ": " + PLAYER_MESSAGE );
+		e.setFormat( PLAYER_NAME + ": " + PLAYER_MESSAGE );
+		e.setMessage(FORMAT + e.getMessage());
 	}
 	
 	@EventHandler

@@ -2,7 +2,7 @@ package hpms.discordchat.channel;
 
 import java.util.UUID;
 
-public class ChannelUpgrade extends ChannelPrefix {
+public abstract class ChannelUpgrade extends ChannelPrefix {
 	
 	protected int currentUpgradeCost;
 	protected int nextUpgradeCost;

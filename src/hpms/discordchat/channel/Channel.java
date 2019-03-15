@@ -20,9 +20,9 @@ public abstract class Channel {
 	protected HashMap<UUID,String> member;
 	protected int maxSlot = ChannelHolder.DEFAULT_SLOT;
 	protected boolean slotLimit = true;
+	protected boolean friendlyFire = false;
 	
 	/* TODO
-	 * Handle channel slot
 	 * Handle buff-exp
 	 * Handle teleportation
 	 * Handle slot upgrades 
@@ -52,6 +52,7 @@ public abstract class Channel {
 	}
 	
 	public void addMember(UUID member) {
+		if(!(this.getCurrentSize() < this.maxSlot) && slotLimit) return;
 		String prefix = Prefix.getPrefixFromPlayer(member, this);
 		if(prefix == null) {
 			prefix = Prefix.getInitialPrefix(this.name);
@@ -82,6 +83,14 @@ public abstract class Channel {
 	public void setMaxSlot(int maxSlot) {
 		this.maxSlot = maxSlot;
 		ChannelHolder.put(this);
+	}
+	
+	public void setSlotLimit(boolean b) {
+		this.slotLimit = b;
+	}
+	
+	public void setFriendlyFire(boolean b) {
+		this.friendlyFire = b;
 	}
 	
 	public String getChannelName() {

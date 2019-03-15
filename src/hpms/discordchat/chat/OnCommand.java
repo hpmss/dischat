@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.channel.ChannelHandler;
 import hpms.discordchat.data.ChannelHolder;
+import hpms.discordchat.item.ConfigMenu;
 import net.md_5.bungee.api.ChatColor;
 
 public class OnCommand implements CommandExecutor{
@@ -23,6 +24,7 @@ public class OnCommand implements CommandExecutor{
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> - Join a channel .");
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat prefix <name> <prefix> - Set a channel prefix ( leader required ) .");
 			sender.sendMessage(ChatColor.YELLOW + "/discordchat prefix <name> <playername> <prefix> - Set a channel's player prefix ( leader required ) .");
+			sender.sendMessage(ChatColor.YELLOW + "/discordchat channel");
 		}
 		else if(args.length == 1) {
 			if(args[0].equalsIgnoreCase("list")) {
@@ -36,6 +38,9 @@ public class OnCommand implements CommandExecutor{
 			}
 			else if(args[0].equalsIgnoreCase("prefix")) {
 				sender.sendMessage(ChatColor.YELLOW + "Missing two params <name> and <prefix>");
+			}
+			else if(args[0].equalsIgnoreCase("channel")) {
+				ConfigMenu.open(((Player) sender).getUniqueId());
 			}
 		}
 		else if(args.length == 2) {

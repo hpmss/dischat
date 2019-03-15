@@ -25,7 +25,6 @@ public class ChannelHolder {
 	private static List<String> cachedLeader = new ArrayList<String>();
 	
 	private static ConfigurationSection storageSection = FileManager.getConfigurationSection("storage", "storage");
-	private static StringBuilder builder = new StringBuilder();
 	
 	public static String DEFAULT_CHANNEL = FileManager.getConfig().getString("default-join-server-channel");
 	public static int DEFAULT_SLOT = FileManager.getConfig().getInt("default-channel-slot");
@@ -90,7 +89,9 @@ public class ChannelHolder {
 		Validator.isNotNull(channelSection,"channel \'" + name + "\' doesnt exist.");
 		UUID leader = UUID.fromString(channelSection.getString("leader"));
 		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection("list").getValues(false);
+		int slot = channelSection.getInt("slot");
 		channel = new ChannelHandler(name, leader,true);
+		channel.setMaxSlot(slot);
 		channel.overrideMember(memberList);
 		cacheChannel(channel);
 		return channel;
@@ -126,6 +127,7 @@ public class ChannelHolder {
 	}
 	
 	public static String getChannelList() {
+		StringBuilder builder = new StringBuilder();
 		for(String s : storageSection.getValues(false).keySet()) {
 			builder.append(s);
 			builder.append(',');
@@ -136,9 +138,7 @@ public class ChannelHolder {
 		else {
 			builder.insert(builder.length(), '.');
 		}
-		String str = builder.toString();
-		builder = new StringBuilder();
-		return str;
+		return builder.toString();
 	}
 	
 	private static void save() {

@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.bukkit.configuration.ConfigurationSection;
 
 import hpms.discordchat.channel.Channel;
+import hpms.discordchat.utils.ErrorState;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
 import net.md_5.bungee.api.ChatColor;
@@ -60,32 +61,29 @@ public class Prefix {
 		save();
 	}
 	
-	public static void update(Channel channel,UUID member,String prefix ) {
-		ConfigurationSection section = prefixSection.getConfigurationSection(channel.getChannelName());
+	public static void update(String channel,UUID member,String prefix ) {
+		ConfigurationSection section = prefixSection.getConfigurationSection(channel);
 		ConfigurationSection rank = section.getConfigurationSection("rank");
 		rank.set(member.toString(), prefix);
 		save();
 	}
 	
-	public static String getInitialPrefix(Channel channel) {
-		if(cachedInitPrefix.containsKey(channel.getChannelName())) {
-			return cachedInitPrefix.get(channel.getChannelName());
-		}
-		return null;
+	public static String getInitialPrefix(String channel) {
+		return cachedInitPrefix.get(channel);
 	}
 	
-	public static String getLeaderPrefix(Channel channel) {
-		ConfigurationSection leader = prefixSection.getConfigurationSection(channel.getChannelName()).getConfigurationSection("leader");
+	public static String getLeaderPrefix(String channel) {
+		ConfigurationSection leader = prefixSection.getConfigurationSection(channel).getConfigurationSection("leader");
 		Validator.isNotNull(leader);
 		String prefix = leader.getString("prefix");
 		return prefix;
 	}
 	
-	public static boolean isPrefix(String prefix,Channel channel) {
-		return prefixSection.getConfigurationSection(channel.getChannelName()).isConfigurationSection(prefix);
+	public static boolean isPrefix(String channel,String prefix) {
+		return prefixSection.getConfigurationSection(channel).getConfigurationSection("member").isConfigurationSection(prefix);
 	}
 	
-	public static String getPrefix(UUID player,Channel channel) {
+	public static String getPrefixFromPlayer(UUID player,Channel channel) {
 		if(!ChannelHolder.isChannelExisted(channel.getChannelName())) return null;
 		ConfigurationSection rank = prefixSection.getConfigurationSection(channel.getChannelName()).getConfigurationSection("rank");
 		Validator.isNotNull(rank);
@@ -96,20 +94,54 @@ public class Prefix {
 		return null;
 	}
 	
-	public static void addPrefix(String name,String prefix,boolean makeDefault) {
+	public static ErrorState addPrefix(String name,String prefix,boolean makeDefault)  {
 		if(prefix.length() != 0) {
+			if(prefix.equalsIgnoreCase(getLeaderPrefix(name))) return ErrorState.LEADER_PREFIX;
+			if(isPrefix(name,prefix)) return ErrorState.PREFIX;
 			ConfigurationSection memberConfig = prefixSection.getConfigurationSection(name).getConfigurationSection("member");
 			memberConfig.createSection(prefix);
-			memberConfig.getConfigurationSection(prefix).set("permission", new ArrayList<String>());
-			//Move current default prefix player to new prefix [To-Do] 
-			if(makeDefault == true) {
+			memberConfig.getConfigurationSection(prefix).set("permission", new ArrayList<String>()); 
+			if(makeDefault) {
+				makePrefixDefault(name,prefix);
+			}
+			save();
+			return ErrorState.SUCCESS;
+		}	
+		return ErrorState.INVALID_LENGTH;
+	}
+	
+	public static ErrorState removePrefix(String name,String prefix) {
+		if(prefix.length() != 0) {
+			if(isPrefix(name,prefix)) {
+				if(prefix.equalsIgnoreCase(getLeaderPrefix(name))) return ErrorState.LEADER_PREFIX;
+				if(prefix.equalsIgnoreCase(getInitialPrefix(name))) return ErrorState.PREFIX;
+				ConfigurationSection memberConfig = prefixSection.getConfigurationSection(name).getConfigurationSection("member");
+				memberConfig.set(prefix, null);
+				overrideChannelPrefix(name,prefix,getInitialPrefix(name));
+				save();
+				return ErrorState.SUCCESS;
+			}
+			return ErrorState.NO_EXISTENCE;
+		}
+		return ErrorState.INVALID_LENGTH;
+	}
+	
+	public static ErrorState makePrefixDefault(String name,String prefix) {
+		if(prefix.length() != 0) {
+			if(isPrefix(name,prefix)) {
+				if(prefix.equalsIgnoreCase(getLeaderPrefix(name))) return ErrorState.LEADER_PREFIX;
+				ConfigurationSection memberConfig = prefixSection.getConfigurationSection(name).getConfigurationSection("member");
 				String currentDefault = cachedInitPrefix.get(name);
 				memberConfig.getConfigurationSection(currentDefault).set("default",null);
 				memberConfig.getConfigurationSection(prefix).set("default", true);
 				cachedInitPrefix.put(name,prefix);
+				overrideChannelPrefix(name,currentDefault,prefix);
+				save();
+				return ErrorState.SUCCESS;
 			}
+			return ErrorState.NO_EXISTENCE;
 		}
-		save();
+		return ErrorState.INVALID_LENGTH;
 	}
 	
 	public static void setChannelChatPrefix(String channel,String prefix) {
@@ -128,6 +160,26 @@ public class Prefix {
 	
 	private static void save() {
 		FileManager.saveConfiguration("prefix");
+	}
+	
+	private static void overrideChannelPrefix(String name,String oldPrefix,String newPrefix) {
+		ConfigurationSection rank = prefixSection.getConfigurationSection(name).getConfigurationSection("rank");
+		for(Entry<String,Object> entry : rank.getValues(false).entrySet()) {
+			if(entry.getValue().toString().equalsIgnoreCase(oldPrefix)) {
+				entry.setValue(newPrefix);
+			}
+		}
+		Channel channel = ChannelHolder.getChannel(name);
+		if(channel.getMemberList().size() != 0) {
+			HashMap<UUID,String> memberList = new HashMap<UUID,String>();
+			memberList.putAll(channel.getMemberList());
+			for(Entry<UUID,String> entry : memberList.entrySet()) {
+				if(entry.getValue().equalsIgnoreCase(oldPrefix)) {
+					entry.setValue(newPrefix);
+				}
+			}
+			channel.overrideMember(memberList);
+		}
 	}
 
 }

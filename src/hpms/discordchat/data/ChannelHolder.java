@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.channel.ChannelHandler;
+import hpms.discordchat.utils.ErrorState;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
 
@@ -27,6 +28,7 @@ public class ChannelHolder {
 	private static StringBuilder builder = new StringBuilder();
 	
 	public static String DEFAULT_CHANNEL = FileManager.getConfig().getString("default-join-server-channel");
+	public static int DEFAULT_SLOT = FileManager.getConfig().getInt("default-channel-slot");
 	
 	public static void initChannelHolder() {
 		Set<String> channelSet = storageSection.getKeys(false);
@@ -45,6 +47,7 @@ public class ChannelHolder {
 	public static void put(Channel channel) {
 		ConfigurationSection channelSection = storageSection.createSection(channel.getChannelName());
 		channelSection.set("leader", channel.getLeader().toString());
+		channelSection.set("slot",channel.getMaxSize());
 		ConfigurationSection list = channelSection.createSection("list");
 		for(Entry<UUID,String> member : channel.getMemberList().entrySet()) {
 			list.set(member.getKey().toString(), member.getValue());
@@ -100,10 +103,10 @@ public class ChannelHolder {
 		return "";
 	}
 	
-	public static int setPlayerCurrentChannel(Player player,String channel) {
-		if(!isChannelExisted(channel)) return -1;
+	public static ErrorState setPlayerCurrentChannel(Player player,String channel) {
+		if(!isChannelExisted(channel)) return ErrorState.NO_EXISTENCE;
 		String current = getPlayerCurrentChannel(player.getUniqueId());
-		if(current.equalsIgnoreCase(channel)) return -2;
+		if(current.equalsIgnoreCase(channel)) return ErrorState.MATCHED;
 		if(current.length() != 0) {
 			Channel currentChannel = getChannel(current);
 			currentChannel.removeMember(player.getUniqueId());
@@ -111,7 +114,7 @@ public class ChannelHolder {
 		Channel newChannel = getChannel(channel);
 		newChannel.addMember(player.getUniqueId());
 		cachedPlayerCurrentChannel.put(player.getUniqueId(), channel);
-		return 0;
+		return ErrorState.SUCCESS;
 	}
 	
 	public static boolean isChannelExisted(String name) {

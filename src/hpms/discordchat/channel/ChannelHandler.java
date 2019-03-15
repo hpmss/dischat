@@ -69,15 +69,24 @@ public class ChannelHandler extends ChannelPrefix {
 	}
 	
 	public static void joinChannel(Player player,String channel) {
-		int b = ChannelHolder.setPlayerCurrentChannel(player,channel);
-		if(b == 0) {
-			player.sendMessage(ChatColor.AQUA + "\'" + channel + "\'" + ChatColor.YELLOW + " channel joined.");
-		}
-		else if(b == -1) {
-			player.sendMessage(ChatColor.YELLOW + "Channel \'" + ChatColor.AQUA + channel +ChatColor.YELLOW + "\' doesnt exist .");
-		}
-		else if(b == -2) {
+		switch( ChannelHolder.setPlayerCurrentChannel(player,channel)) {
+		case INVALID_LENGTH:
+			break;
+		case LEADER_PREFIX:
+			break;
+		case MATCHED:
 			player.sendMessage(ChatColor.YELLOW + "You are already in \'" + ChatColor.AQUA +channel + ChatColor.YELLOW + "\' channel .");
+			break;
+		case NO_EXISTENCE:
+			player.sendMessage(ChatColor.YELLOW + "Channel \'" + ChatColor.AQUA + channel +ChatColor.YELLOW + "\' doesnt exist .");
+			break;
+		case SUCCESS:
+			player.sendMessage(ChatColor.AQUA + "\'" + channel + "\'" + ChatColor.YELLOW + " channel joined.");
+			break;
+		case PREFIX:
+			break;
+		case NULL:
+			break;
 		}
 	}
 

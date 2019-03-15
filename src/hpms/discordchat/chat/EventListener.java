@@ -8,7 +8,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import hpms.discordchat.channel.Channel;
@@ -43,6 +45,16 @@ public class EventListener implements Listener{
 		if(ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId()) == null) {
 			ChannelHandler.joinChannel(e.getPlayer(), ChannelHolder.DEFAULT_CHANNEL);
 		}
+	}
+	
+	@EventHandler
+	public void onPlayerInteractEvent(PlayerInteractEvent e) {
+		
+	}
+	
+	@EventHandler
+	public void onInventoryOpenEvent(InventoryOpenEvent e) {
+		
 	}
 	
 	

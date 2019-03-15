@@ -119,5 +119,15 @@ public abstract class Channel {
 	public abstract ErrorState removePrefix(UUID setter,String prefix);
 	public abstract String getPrefix(UUID member);
 	public abstract String getChannelChatPrefix();
+	
+	public abstract void upgradeSlot(int amount);
+	public abstract void setUpgradeCost(int cost);
+	public abstract void setNextUpgradeCost(int cost);
+	public abstract void setUpgradeCostRate(float rate);
+	public abstract void setMaxUpgradableSlot(int slot);
+	public abstract int getMaxUpgradableSlot();
+	public abstract int getCurrentUpgradeCost();
+	public abstract int getNextUpgradeCost();
+	
 
 }

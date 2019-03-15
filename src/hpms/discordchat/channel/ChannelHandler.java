@@ -13,7 +13,7 @@ import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
 import net.md_5.bungee.api.ChatColor;
 
-public class ChannelHandler extends ChannelPrefix {
+public class ChannelHandler extends ChannelUpgrade {
 
 	public ChannelHandler(String name, UUID leader,boolean getFlag) {
 		super(name, leader,getFlag);

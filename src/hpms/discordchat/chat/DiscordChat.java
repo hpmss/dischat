@@ -6,8 +6,9 @@ import hpms.discordchat.channel.ChannelHandler;
 
 public class DiscordChat extends JavaPlugin{
 	
+	public static JavaPlugin plugin;
+	
 	public void onEnable() {
-		
 		initDiscordChat();
 	}
 	
@@ -17,8 +18,11 @@ public class DiscordChat extends JavaPlugin{
 	
 	public void initDiscordChat() {
 		ChannelHandler.initChannelHandler(this);
+		OnCommand command = new OnCommand();
+		plugin = this;
 		this.getServer().getPluginManager().registerEvents(new EventListener(),this);
-		this.getCommand("discordchat").setExecutor(new OnCommand());
+		this.getCommand("discordchat").setExecutor(command);
+		this.getCommand("flush").setExecutor(command);
 	}
 	
 }

@@ -5,11 +5,20 @@ version: 1.0
 description: Chatting in channels.
 commands:
       discordchat:
+         aliases: dc
          description: Main command.
-         usage: /discordchat
+         permission: discordchat.commands
+      flush:
+         aliases: f
+         description: Flush the chat.
+         permission: discordchat.flush
          
 permissions:
       discordchat.overridechannel:
          default: op
       discordchat.multiplechannel:
+         default: op
+      discordchat.flush:
+         default: op
+      discordchat.commands:
          default: op

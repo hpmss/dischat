@@ -108,12 +108,13 @@ public class ChannelHolder {
 		if(!isChannelExisted(channel)) return ErrorState.NO_EXISTENCE;
 		String current = getPlayerCurrentChannel(player.getUniqueId());
 		if(current.equalsIgnoreCase(channel)) return ErrorState.MATCHED;
+		Channel newChannel = getChannel(channel);
+		boolean b = newChannel.addMember(player.getUniqueId());
+		if(!b) return ErrorState.OUT_OF_BOUND;
 		if(current.length() != 0) {
 			Channel currentChannel = getChannel(current);
-			currentChannel.removeMember(player.getUniqueId());
+			currentChannel.removeMember(player.getUniqueId(),false);
 		}
-		Channel newChannel = getChannel(channel);
-		newChannel.addMember(player.getUniqueId());
 		cachedPlayerCurrentChannel.put(player.getUniqueId(), channel);
 		return ErrorState.SUCCESS;
 	}
@@ -146,9 +147,10 @@ public class ChannelHolder {
 	}
 	
 	public static void debug() {
-		Log.info(cachedChannel);
-		Log.info(cachedPlayerCurrentChannel);
-		Log.info(cachedLeader);
+		Log.info("---ChannelHolder---");
+		Log.info("Cached channel: " + cachedChannel);
+		Log.info("Cached CPC: " + cachedPlayerCurrentChannel);
+		Log.info("Cached leader: " + cachedLeader);
 	}
 	
 }

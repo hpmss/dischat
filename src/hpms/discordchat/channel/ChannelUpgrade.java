@@ -44,11 +44,6 @@ public abstract class ChannelUpgrade extends ChannelPrefix {
 	public int getNextUpgradeCost() {
 		return this.nextUpgradeCost;
 	}
-
-	
-
-	
-	
 	
 	
 }

@@ -8,7 +8,7 @@ import org.bukkit.OfflinePlayer;
 public class Validator {
 	
 	public static boolean isNotNull(Object obj) {
-		if(!obj.equals(null)) {
+		if(obj != null) {
 			return true;
 		}
 		else {
@@ -17,7 +17,7 @@ public class Validator {
 	}
 	
 	public static boolean isNotNull(Object obj,String message) {
-		if(!obj.equals(null)) {
+		if(obj != null) {
 			return true;
 		}else {
 			throw new IllegalArgumentException(message);

@@ -24,7 +24,7 @@ public class ChannelHandler extends ChannelUpgrade {
 		ChannelHolder.initChannelHolder();
 		Prefix.initPrefix();
 	}
-	
+	  
 	public static Channel createNewChannel(String name,UUID leader,boolean getFlag) {
 		OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
 		if(ChannelHolder.isPlayerLeader(leader))  {
@@ -36,7 +36,7 @@ public class ChannelHandler extends ChannelUpgrade {
 			}
 		}
 		if(getPlayerCurrentChannel(leader) != null) {
-			getPlayerCurrentChannel(leader).removeMember(leader);
+			getPlayerCurrentChannel(leader).removeMember(leader,false);
 		}
 		Channel channel = new ChannelHandler(name,leader,getFlag);
 		ChannelHolder.cacheChannel(channel);
@@ -64,16 +64,16 @@ public class ChannelHandler extends ChannelUpgrade {
 		return ChannelHolder.getChannel(name);
 	}
 	
+	public static String getPlayerCurrentChannelName(UUID player) {
+		return ChannelHolder.getPlayerCurrentChannel(player);
+	}
+	
 	public static Channel getPlayerCurrentChannel(UUID player) {
 		return getChannelByName(ChannelHolder.getPlayerCurrentChannel(player));
 	}
 	
 	public static void joinChannel(Player player,String channel) {
 		switch( ChannelHolder.setPlayerCurrentChannel(player,channel)) {
-		case INVALID_LENGTH:
-			break;
-		case LEADER_PREFIX:
-			break;
 		case MATCHED:
 			player.sendMessage(ChatColor.YELLOW + "You are already in \'" + ChatColor.AQUA +channel + ChatColor.YELLOW + "\' channel .");
 			break;
@@ -83,11 +83,13 @@ public class ChannelHandler extends ChannelUpgrade {
 		case SUCCESS:
 			player.sendMessage(ChatColor.AQUA + "\'" + channel + "\'" + ChatColor.YELLOW + " channel joined.");
 			break;
-		case PREFIX:
+		case OUT_OF_BOUND:
+			player.sendMessage(ChatColor.YELLOW + "Channel reached maximum size.");
 			break;
-		case NULL:
+		default:
 			break;
 		}
 	}
+	
 
 }

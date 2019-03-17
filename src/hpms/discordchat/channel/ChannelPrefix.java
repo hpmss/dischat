@@ -2,6 +2,7 @@ package hpms.discordchat.channel;
 
 import java.util.UUID;
 
+import hpms.discordchat.data.ChannelHolder;
 import hpms.discordchat.data.Prefix;
 import hpms.discordchat.utils.ErrorState;
 
@@ -18,7 +19,15 @@ public abstract class ChannelPrefix extends Channel{
 			this.member.put(member,prefix);
 		}
 		Prefix.update(this.name, member, prefix);
+		ChannelHolder.put(this);
 		return true;
+	}
+	
+	public ErrorState setPrefixChatPrefix(UUID setter,String prefix,String chatPrefix) {
+		if(setter.equals(this.leader)) {
+			return Prefix.setPrefixChatPrefix(this.name, prefix, chatPrefix);
+		}
+		return ErrorState.NULL;
 	}
 	
 	public boolean setChannelChatPrefix(UUID setter,String prefix) {
@@ -44,7 +53,11 @@ public abstract class ChannelPrefix extends Channel{
 	}
 	
 	public String getPrefix(UUID member) {
-		return Prefix.getPrefixFromPlayer(member, this);
+		return Prefix.getPrefixFromPlayer(member, this.name);
+	}
+	
+	public String getPrefixChatPrefix(String prefix) {
+		return Prefix.getPrefixChatPrefix(this.name, prefix);
 	}
 	
 	public String getChannelChatPrefix() {

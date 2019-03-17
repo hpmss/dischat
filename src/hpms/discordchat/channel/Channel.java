@@ -18,7 +18,7 @@ public abstract class Channel {
 	protected UUID leader;
 	protected String name;
 	protected HashMap<UUID,String> member;
-	protected int maxSlot = ChannelHolder.DEFAULT_SLOT;
+	protected int maxSlot = 1;//ChannelHolder.DEFAULT_SLOT;
 	protected boolean slotLimit = true;
 	protected boolean friendlyFire = false;
 	
@@ -38,7 +38,9 @@ public abstract class Channel {
 			}
 		}
 		Prefix.put(this,getFlag);
-		this.member.put(this.leader, Prefix.getLeaderPrefix(this.name));
+		if(getFlag == false) {
+			this.member.put(this.leader, Prefix.getLeaderPrefix(this.name));
+		}
 		ChannelHolder.put(this);
 	}
 	
@@ -51,22 +53,33 @@ public abstract class Channel {
 		ChannelHolder.put(this);
 	}
 	
-	public void addMember(UUID member) {
-		if(!(this.getCurrentSize() < this.maxSlot) && slotLimit) return;
-		String prefix = Prefix.getPrefixFromPlayer(member, this);
+	public boolean addMember(UUID member) {
+		String prefix = Prefix.getPrefixFromPlayer(member, this.name);
 		if(prefix == null) {
 			prefix = Prefix.getInitialPrefix(this.name);
 		}
+		if(this.isPlayerAlreadyJoined(member)) {
+			this.member.put(member, prefix);
+			ChannelHolder.put(this);
+			return true;
+		}
+		if(!(this.getJoinedSize() < this.maxSlot) && slotLimit) return false;
 		this.member.put(member,prefix);
 		ChannelHolder.put(this);
 		Prefix.update(this.name,member,prefix);
+		return true;
 	}
 	
-	public void removeMember(UUID uuid) {
+	public boolean removeMember(UUID uuid,boolean hard) {
+		if(hard) {
+			Prefix.removePlayer(this.name, uuid);
+		}
 		if(this.member.containsKey(uuid)) {
 			this.member.remove(uuid);
 			ChannelHolder.put(this);
+			return true;
 		}
+		return false;
 	}
 	
 	public void setChannelName(String name) {
@@ -77,6 +90,13 @@ public abstract class Channel {
 	
 	public void setLeader(UUID leader) {
 		this.leader = leader;
+		ChannelHolder.put(this);
+	}
+	
+	public void setLeaderChatPrefix(String prefix) {
+		if(this.member.containsKey(leader)) {
+			this.member.put(this.leader, prefix);
+		}
 		ChannelHolder.put(this);
 	}
 	
@@ -109,15 +129,25 @@ public abstract class Channel {
 		return member.size();
 	}
 	
+	public int getJoinedSize() {
+		return Prefix.getChannelSize(this.name);
+	}
+	
 	public HashMap<UUID,String> getMemberList() {
 		return member;
 	}
 	
+	public boolean isPlayerAlreadyJoined(UUID uuid) {
+		return Prefix.isPlayerAlreadyJoined(this.name,uuid);
+	}
+	
 	public abstract boolean setPrefix(UUID setter,UUID member,String prefix);
+	public abstract ErrorState setPrefixChatPrefix(UUID setter,String prefix,String chatPrefix);
 	public abstract boolean setChannelChatPrefix(UUID setter,String prefix);
 	public abstract ErrorState addPrefix(UUID setter,String prefix,boolean makeDefault);
 	public abstract ErrorState removePrefix(UUID setter,String prefix);
 	public abstract String getPrefix(UUID member);
+	public abstract String getPrefixChatPrefix(String prefix);
 	public abstract String getChannelChatPrefix();
 	
 	public abstract void upgradeSlot(int amount);

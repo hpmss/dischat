@@ -16,7 +16,6 @@ public class FileManager {
 	private static FileConfiguration prefixFile;
 	private static FileConfiguration configFile;
 	
-	//Error somewhere here
 	public static void initFileManager(JavaPlugin plugin) {
 		plugin.getDataFolder().mkdir();
 		PATH = plugin.getDataFolder().getPath();
@@ -74,6 +73,17 @@ public class FileManager {
 		}catch(IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static File createNewFile(String name) {
+		File file = new File(PATH,name);
+		createNewFile(file);
+		return file;
+	}
+	
+	public static YamlConfiguration getYamlConfiguration(String name) {
+		YamlConfiguration file = YamlConfiguration.loadConfiguration(createNewFile(name));
+		return file;
 	}
 	
 	private static void createNewFile(File file) {

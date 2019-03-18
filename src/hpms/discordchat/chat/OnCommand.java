@@ -12,6 +12,8 @@ import hpms.discordchat.channel.ChannelHandler;
 import hpms.discordchat.data.ChannelHolder;
 import hpms.discordchat.data.Prefix;
 import hpms.discordchat.item.ConfigMenu;
+import hpms.discordchat.utils.ErrorState;
+import hpms.discordchat.utils.PendingInvitation;
 import net.md_5.bungee.api.ChatColor;
 
 public class OnCommand implements CommandExecutor{
@@ -44,6 +46,7 @@ public class OnCommand implements CommandExecutor{
 				else if(args[0].equalsIgnoreCase("debug")) {
 					ChannelHolder.debug();
 					Prefix.debug();
+					PendingInvitation.debug();
 				}
 				else if(args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("remove")) {
 					sender.sendMessage(ChatColor.YELLOW + "You must specify a name");
@@ -74,7 +77,20 @@ public class OnCommand implements CommandExecutor{
 				}
 				else if(args[0].equalsIgnoreCase("join")) {
 					if(sender instanceof Player) {
-						ChannelHandler.joinChannel((Player)sender,args[1]);
+						Player p = (Player) sender;
+						Channel channel = ChannelHandler.getChannelByName(args[1]);
+						
+						PendingInvitation inv = PendingInvitation.deserializeInvitation(channel.getLeader());
+					//	if(!p.hasPermission("discordchat.bypassjoin")) {
+							inv.addRequester(p.getUniqueId());
+							if(inv.isAccepted(p.getUniqueId()) == ErrorState.SUCCESS) {
+								ChannelHandler.joinChannel(p,args[1]);
+							}
+							else {
+								p.sendMessage(ChatColor.YELLOW + "You are currently not accepted by leader to join the channel.");
+							}
+						//}
+						
 					}else {
 						sender.sendMessage(ChatColor.RED + "Joining a channel for console is currently not supported.");
 					}

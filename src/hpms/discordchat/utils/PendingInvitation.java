@@ -1,59 +1,199 @@
 package hpms.discordchat.utils;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.bukkit.entity.Player;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class PendingInvitation{
+import com.google.common.collect.Maps;
+
+import hpms.discordchat.chat.DiscordChat;
+
+public class PendingInvitation implements ConfigurationSerializable{
 	
-	/* TODO
-	 * Multiple invitations
-	 */
+	{
+		ConfigurationSerialization.registerClass(PendingInvitation.class);
+	}
+	
+	private static HashMap<UUID,PendingInvitation> cachedInvitation = Maps.newHashMap();
+	private static int EXPIRATION = 10;
 	
 	private JavaPlugin plugin;
-	private HashMap<UUID,Boolean> requester = new HashMap<UUID,Boolean>();
-	private Player receiver;
-	private Player previousRequester;
+	private HashMap<String,Integer> requester = Maps.newHashMap();
+	private UUID receiver;
+	private UUID previousRequester;
+	private UUID previousAccepted;
 	private int expiration;
 	
-	public PendingInvitation(JavaPlugin plugin,Player receiver, int expiration) {
+	public PendingInvitation(JavaPlugin plugin,UUID receiver, int expiration) {
 		this.plugin = plugin;
 		this.receiver = receiver;
 		this.expiration = expiration;
 	}
 	
-	public void addRequester(Player requester) {
-		this.requester.put(requester.getUniqueId(), false);
-		this.previousRequester = requester;
-		invalidate();
+	public PendingInvitation(Map<String,Object> map) {
+		for(Entry<String,Object> data : map.entrySet()) {
+			switch(data.getKey()) {
+			case "plugin" :
+				this.plugin = (JavaPlugin) data.getValue();
+				break;
+			case "receiver" :
+				this.receiver = UUID.fromString(data.getValue().toString());
+				break;
+			case "previousRequester" : 
+				this.previousRequester = data.getValue() == null ? null : UUID.fromString(data.getValue().toString());
+				break;
+			case "previousAccepted" :
+				this.previousAccepted = data.getValue() == null ? null : UUID.fromString(data.getValue().toString());
+				break;
+			case "expiration" :
+				this.expiration = Integer.parseInt(data.getValue().toString());
+				break;
+			case "requester" :
+				this.requester = (HashMap<String,Integer>) data.getValue();
+				break;
+			}
+		}
+		
 	}
 	
-	public boolean acceptInvitation(Player player) {
-		if(!this.requester.containsKey(player.getUniqueId())) return false;
-		this.requester.put(player.getUniqueId(), true);
+	public void addRequester(UUID requester) {
+		this.requester.put(requester.toString(), this.expiration);
+		this.previousRequester = requester;
+		this.invalidate();
+		this.serializeInvitation();
+	}
+	
+	public boolean acceptInvitation(UUID player) {
+		if(!this.requester.containsKey(player.toString())) return false;
+		this.requester.put(player.toString(), -1);
+		this.previousAccepted = player;
+		this.serializeInvitation();
 		return true;
 	}
 	
-	public ErrorState isAccepted(Player player) {
-		if(!this.requester.containsKey(player.getUniqueId())) return ErrorState.NO_EXISTENCE;
-		return (requester.get(player.getUniqueId()) == true) ? ErrorState.SUCCESS : ErrorState.FAIL;
+	public ErrorState isAccepted(UUID player) {
+		if(!this.requester.containsKey(player.toString())) return ErrorState.NO_EXISTENCE;
+		return (requester.get(player.toString()) == -1) ? ErrorState.SUCCESS : ErrorState.FAIL;
 	}
 	
-	public Player getReceiver() {
+	public void feedbackMessage(String receive,String prevAccepted) {
+		if(this.previousAccepted != null) {
+			OfflinePlayer receiver = Bukkit.getServer().getOfflinePlayer(this.receiver);
+			OfflinePlayer previousAccepted = Bukkit.getServer().getOfflinePlayer(this.previousAccepted);
+			if(receiver.isOnline()) {
+				receiver.getPlayer().sendMessage(receive);
+			}
+			if(previousAccepted.isOnline()) {
+				previousAccepted.getPlayer().sendMessage(prevAccepted);
+			}
+		}
+	}
+	
+	public void setPlugin(JavaPlugin plugin) {
+		this.plugin = plugin;
+	}
+	
+	public UUID getReceiver() {
 		return this.receiver;
 	}
 	
 	private void invalidate() {
-		new TaskHandler(this.plugin,expiration,0) {
-			private Player player = previousRequester;
-				public void run() {
-					requester.remove(player.getUniqueId());
-				}
-			};
+		if(this.plugin != null) {
+			if(requester.get(previousRequester.toString()) != -1) {
+				new TaskHandler(this.plugin,20,20) {
+					private String player = previousRequester.toString();
+						public void run() {
+							if(requester.containsKey(player) && requester.get(player) == 0) {
+								requester.remove(player);
+								serializeInvitation();
+								cancelTask();
+							}
+							if(requester.containsKey(player)) {
+								requester.put(player, requester.get(player) - 1);
+							}
+						}
+				};
+			}
+		}
 	}
 	
+	public YamlConfiguration serializeInvitation() {
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		config.set(this.receiver.toString(), this);
+		try {
+			config.save(FileManager.createNewFile("inv_data.dat"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return config;
+	}
 	
+	private void reloadInvitationExpiration() {
+		if(this.requester.size() != 0) {
+			HashMap<String,Integer> copy = Maps.newHashMap(this.requester);
+			for(Entry<String,Integer> request : copy.entrySet()) {
+				if(request.getValue() != -1) {
+					new TaskHandler(this.plugin,20,20) {
+						private String player = request.getKey();
+						public void run() {
+							if(requester.containsKey(player) && requester.get(player) == 0) {
+								requester.remove(player);
+								serializeInvitation();
+								cancelTask();
+							}
+							if(requester.containsKey(player)) {
+								requester.put(player, requester.get(player) - 1);
+							}
+						}
+					};
+				}
+			}
+		}
+	}
+	
+	@Override
+	public Map<String, Object> serialize() {
+		Map<String,Object> map = Maps.newHashMap();
+		map.put("receiver", this.receiver.toString());
+		map.put("previousRequester", this.previousRequester == null ? null : this.previousRequester.toString());
+		map.put("previousAccepted", this.previousAccepted == null ? null : this.previousAccepted.toString());
+		map.put("requester", this.requester);
+		map.put("expiration", this.expiration);
+		return map;
+	}
+	
+	public static PendingInvitation deserializeInvitation(UUID player) {
+		PendingInvitation inv = cachedInvitation.get(player);
+		if(inv != null) {
+			return inv;
+		}
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		if(config.getValues(false).containsKey(player.toString())) {
+			inv = (PendingInvitation) config.getValues(false).get(player.toString());
+			inv.setPlugin(DiscordChat.plugin);
+			inv.reloadInvitationExpiration();
+		}
+		else {
+			inv = new PendingInvitation(DiscordChat.plugin,player,EXPIRATION);
+			inv.serializeInvitation();
+		}
+		cachedInvitation.put(player, inv);
+		return inv;
+	}
+	
+	public static void debug() {
+		PendingInvitation inv = deserializeInvitation(Bukkit.getPlayer("hpms").getUniqueId());
+		Log.info(inv.getReceiver());
+	}
 
 }

@@ -26,13 +26,8 @@ public class Validator {
 	
 	public static boolean isPlayerOnline(UUID uuid) {
 		OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-		if(!player.equals(null)) {
-			if(player.isOnline()) {
+		if(player.isOnline()) {
 				return true;
-			}
-			else {
-				return false;
-			}
 		}
 		return false;
 	}

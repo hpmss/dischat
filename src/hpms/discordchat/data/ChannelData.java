@@ -10,30 +10,26 @@ import java.util.UUID;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
-import org.bukkit.entity.Player;
 
 import hpms.discordchat.channel.Channel;
-import hpms.discordchat.channel.ChannelHandler;
+import hpms.discordchat.channel.ChannelCore;
 import hpms.discordchat.utils.ErrorState;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
 
-public class ChannelHolder {
+public class ChannelData extends ChannelDataConstant{
 	
-	private static HashMap<String,Channel> cachedChannel = new HashMap<String,Channel>();
+	private static HashMap<String,ChannelCore> cachedChannel = new HashMap<String,ChannelCore>();
 	private static HashMap<UUID,String> cachedPlayerCurrentChannel = new HashMap<UUID,String>();
 	private static List<String> cachedLeader = new ArrayList<String>();
 	
-	private static ConfigurationSection storageSection = FileManager.getConfigurationSection("storage", "storage");
-	
-	public static String DEFAULT_CHANNEL = FileManager.getConfig().getString("default-join-server-channel");
-	public static int DEFAULT_SLOT = FileManager.getConfig().getInt("default-channel-slot");
-	
+	private static ConfigurationSection storageSection = FileManager.getConfigurationSection(STORAGE, STORAGE);
+
 	public static void initChannelHolder() {
 		Set<String> channelSet = storageSection.getKeys(false);
 		for(String channel : channelSet) {
-			String uuid = storageSection.getConfigurationSection(channel).getString("leader");
-			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection("list").getValues(false);
+			String uuid = storageSection.getConfigurationSection(channel).getString(LEADER);
+			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection(LIST).getValues(false);
 			if(memberList.size() != 0) {
 				for(Entry<String,Object> entry : memberList.entrySet()) {
 					cachedPlayerCurrentChannel.put(UUID.fromString(entry.getKey()),channel);
@@ -43,11 +39,17 @@ public class ChannelHolder {
 		}
 	}
 	
-	public static void put(Channel channel) {
-		ConfigurationSection channelSection = storageSection.createSection(channel.getChannelName());
-		channelSection.set("leader", channel.getLeader().toString());
-		channelSection.set("slot",channel.getMaxSize());
-		ConfigurationSection list = channelSection.createSection("list");
+	public static void put(ChannelCore channel) {
+		ConfigurationSection channelSection = null;
+		if(isChannelExisted(channel.getChannelName())) {
+			channelSection = storageSection.getConfigurationSection(channel.getChannelName());
+		}
+		else {
+			channelSection = storageSection.createSection(channel.getChannelName());
+		}
+		channelSection.set(LEADER, channel.getLeader().toString());
+		channelSection.set(SLOT,channel.getMaxSize());
+		ConfigurationSection list = channelSection.createSection(LIST);
 		for(Entry<UUID,String> member : channel.getMemberList().entrySet()) {
 			list.set(member.getKey().toString(), member.getValue());
 			cachedPlayerCurrentChannel.put(member.getKey(), channel.getChannelName());
@@ -55,7 +57,7 @@ public class ChannelHolder {
 		save();
 	}
 	
-	public static void cacheChannel(Channel channel) {
+	public static void cacheChannel(ChannelCore channel) {
 		cachedChannel.put(channel.getChannelName(), channel);
 	}
 	
@@ -64,8 +66,8 @@ public class ChannelHolder {
 	}
 	
 	public static void remove(String name) {
-		Channel channel = getChannel(name);
-		Channel global = getChannel(DEFAULT_CHANNEL);
+		ChannelCore channel = getChannel(name);
+		ChannelCore global = getChannel(DEFAULT_CHANNEL);
 		for(UUID member : channel.getMemberList().keySet()) {
 			global.addMember(member);
 			cachedPlayerCurrentChannel.put(member, DEFAULT_CHANNEL);
@@ -76,21 +78,21 @@ public class ChannelHolder {
 		save();
 	}
 	
-	public static Channel getChannel(String name) {
+	public static ChannelCore getChannel(String name) {
 		if(name.length() == 0) {
 			return null;
 		}
 		Validator.isTrue(isChannelExisted(name));
-		Channel channel = cachedChannel.get(name);
+		ChannelCore channel = cachedChannel.get(name);
 		if(channel != null) {
 			return channel;
 		}
 		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
 		Validator.isNotNull(channelSection,"channel \'" + name + "\' doesnt exist.");
-		UUID leader = UUID.fromString(channelSection.getString("leader"));
-		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection("list").getValues(false);
-		int slot = channelSection.getInt("slot");
-		channel = new ChannelHandler(name, leader,true);
+		UUID leader = UUID.fromString(channelSection.getString(LEADER));
+		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection(LIST).getValues(false);
+		int slot = channelSection.getInt(SLOT);
+		channel = new Channel(name, leader,true);
 		channel.setMaxSlot(slot);
 		channel.overrideMember(memberList);
 		cacheChannel(channel);
@@ -104,18 +106,18 @@ public class ChannelHolder {
 		return "";
 	}
 	
-	public static ErrorState setPlayerCurrentChannel(Player player,String channel) {
+	public static ErrorState setPlayerCurrentChannel(UUID player,String channel) {
 		if(!isChannelExisted(channel)) return ErrorState.NO_EXISTENCE;
-		String current = getPlayerCurrentChannel(player.getUniqueId());
+		String current = getPlayerCurrentChannel(player);
 		if(current.equalsIgnoreCase(channel)) return ErrorState.MATCHED;
-		Channel newChannel = getChannel(channel);
-		boolean b = newChannel.addMember(player.getUniqueId());
+		ChannelCore newChannel = getChannel(channel);
+		boolean b = newChannel.addMember(player);
 		if(!b) return ErrorState.OUT_OF_BOUND;
 		if(current.length() != 0) {
-			Channel currentChannel = getChannel(current);
-			currentChannel.removeMember(player.getUniqueId(),false);
+			ChannelCore currentChannel = getChannel(current);
+			currentChannel.removeMember(player,false);
 		}
-		cachedPlayerCurrentChannel.put(player.getUniqueId(), channel);
+		cachedPlayerCurrentChannel.put(player, channel);
 		return ErrorState.SUCCESS;
 	}
 	
@@ -143,7 +145,7 @@ public class ChannelHolder {
 	}
 	
 	private static void save() {
-		FileManager.saveConfiguration("storage");
+		FileManager.saveConfiguration(STORAGE);
 	}
 	
 	public static void debug() {

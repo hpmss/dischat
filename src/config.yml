@@ -1,4 +1,4 @@
-default-prefix: "&bChannel"
+default-role: "&bChannel"
 default-leader-prefix: "&bChannel Leader"
 default-join-server-channel: "Global"
 default-channel-slot: 3

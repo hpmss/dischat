@@ -15,9 +15,9 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.channel.Channel;
-import hpms.discordchat.channel.ChannelHandler;
-import hpms.discordchat.data.ChannelHolder;
+import hpms.discordchat.data.ChannelData;
 
 public class EventListener implements Listener{
 	
@@ -27,7 +27,7 @@ public class EventListener implements Listener{
 	
 	@EventHandler
 	public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent e) {
-		if(!ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId()).getChannelName().equalsIgnoreCase(ChannelHolder.DEFAULT_CHANNEL)) {
+		if(!ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId()).getChannelName().equalsIgnoreCase(ChannelData.DEFAULT_CHANNEL)) {
 			List<Entity> players = getNearbyPlayers(e.getPlayer(),10,10,10);
 			e.getRecipients().clear();
 			e.getRecipients().add(e.getPlayer());
@@ -36,18 +36,18 @@ public class EventListener implements Listener{
 			}
 		}
 		
-		Channel channel = ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId());
+		Channel channel = ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId());
 		Log.info(e.getPlayer().getUniqueId().toString());
 		Log.info(channel.getMemberList());
 		String form = FORMAT.replace("<channelprefix>",ChatColor.translateAlternateColorCodes('&', channel.getChannelChatPrefix()));
-		form = form.replace("<chatprefix>", ChatColor.translateAlternateColorCodes('&', channel.getPrefixChatPrefix(channel.getPrefix(e.getPlayer().getUniqueId()))));
+		form = form.replace("<chatprefix>", ChatColor.translateAlternateColorCodes('&', channel.getRolePrefix(channel.getRole(e.getPlayer().getUniqueId()))));
 		e.setFormat(form +  PLAYER_NAME + ": " + PLAYER_MESSAGE );
 	}
 	
 	@EventHandler
 	public void onPlayerJoinEvent(PlayerJoinEvent e) {
-		if(ChannelHandler.getPlayerCurrentChannel(e.getPlayer().getUniqueId()) == null) {
-			ChannelHandler.joinChannel(e.getPlayer(), ChannelHolder.DEFAULT_CHANNEL);
+		if(ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId()) == null) {
+			ChannelAPI.joinChannel(e.getPlayer().getUniqueId(), ChannelData.DEFAULT_CHANNEL);
 		}
 	}
 	

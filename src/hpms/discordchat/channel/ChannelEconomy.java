@@ -2,14 +2,14 @@ package hpms.discordchat.channel;
 
 import java.util.UUID;
 
-public abstract class ChannelUpgrade extends ChannelPrefix {
+public abstract class ChannelEconomy extends ChannelRole {
 	
 	protected int currentUpgradeCost;
 	protected int nextUpgradeCost;
 	protected int maxUpgradeSlot;
 	protected float costScaleRate;
 	
-	public ChannelUpgrade(String name, UUID leader, boolean getFlag) {
+	public ChannelEconomy(String name, UUID leader, boolean getFlag) {
 		super(name, leader, getFlag);
 	}
 

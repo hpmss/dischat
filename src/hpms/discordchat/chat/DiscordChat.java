@@ -2,7 +2,7 @@ package hpms.discordchat.chat;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
-import hpms.discordchat.channel.ChannelHandler;
+import hpms.discordchat.api.ChannelAPI;
 
 public class DiscordChat extends JavaPlugin{
 	
@@ -17,9 +17,9 @@ public class DiscordChat extends JavaPlugin{
 	}
 	
 	public void initDiscordChat() {
-		ChannelHandler.initChannelHandler(this);
-		OnCommand command = new OnCommand();
 		plugin = this;
+		ChannelAPI.initChannelAPI(this);
+		OnCommand command = new OnCommand();
 		this.getServer().getPluginManager().registerEvents(new EventListener(),this);
 		this.getCommand("discordchat").setExecutor(command);
 		this.getCommand("flush").setExecutor(command);

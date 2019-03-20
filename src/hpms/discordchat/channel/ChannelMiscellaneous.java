@@ -10,42 +10,41 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 		super(name, leader, getFlag);
 	}
 
-	public void requestTeleportation(UUID receiver, UUID requester) {
+	public boolean requestTeleportation(UUID receiver, UUID requester) {
 		if(Validator.isPlayerOnline(receiver) && Validator.isPlayerOnline(requester)) {
-			
-		}else {
-			
+			if(this.isPlayerAlreadyJoined(receiver) && this.isPlayerAlreadyJoined(requester)) {
+				
+				
+				
+				return true;
+			}
 		}
+		return false;
+	}
+	
+	public boolean requestInventorySharing(UUID receiver, UUID requester) {
+		return false;
 	}
 
-	public void requestTrading(UUID receiver, UUID requester) {
+	public boolean acceptTeleportation(UUID receiver, UUID requester) {
+		return false;
 		
 	}
 	
-	public void requestInventorySharing(UUID receiver, UUID requester) {
+	public boolean acceptInventorySharing(UUID receiver, UUID requester) {
+		return false;
 	}
 
-	public void acceptTeleportation(UUID receiver, UUID requester) {
-		
+	public boolean toggleTeleportation(UUID receiver) {
+		return false;
 	}
 
-	public void acceptTrading(UUID receiver, UUID requester) {
-		
-	}
-	
-	public void acceptInventorySharing(UUID receiver, UUID requester) {
+	public boolean toggleExpSharing(UUID member) {
+		return false;
 	}
 
-	public void toggleTeleportation(UUID receiver) {
-		
-	}
-
-	public void toggleExpSharing(UUID member) {
-		
-	}
-
-	public void toggleInventorySharing(UUID member) {
-		
+	public boolean toggleInventorySharing(UUID member) {
+		return false;
 	}
 
 

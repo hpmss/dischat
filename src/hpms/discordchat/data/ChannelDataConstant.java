@@ -8,5 +8,5 @@ public class ChannelDataConstant {
 	protected static String SLOT = "slot";
 	protected static String LIST = "list";
 	public static String DEFAULT_CHANNEL = FileManager.getConfig().getString("default-join-server-channel");
-	protected static int DEFAULT_SLOT = FileManager.getConfig().getInt("default-channel-slot");
+	public static int DEFAULT_SLOT = FileManager.getConfig().getInt("default-channel-slot");
 }

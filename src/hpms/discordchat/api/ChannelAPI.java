@@ -9,6 +9,7 @@ import hpms.discordchat.data.ChannelBackend;
 import hpms.discordchat.data.ChannelData;
 import hpms.discordchat.data.Role;
 import hpms.discordchat.utils.FileManager;
+import hpms.discordchat.utils.PendingInvitation;
 
 public class ChannelAPI {
 	
@@ -17,6 +18,11 @@ public class ChannelAPI {
 		ChannelBackend.initBackend();
 		ChannelData.initChannelHolder();
 		Role.initRole();
+		PendingInvitation.reloadAllInvitation();
+	}
+	
+	public static void saveData() {
+		PendingInvitation.saveSerialization();
 	}
 	  
 	public static Channel createNewChannel(String channelName,UUID leader,boolean getFlag) {

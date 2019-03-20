@@ -18,7 +18,7 @@ public abstract class ChannelCore implements ChannelUnit{
 	protected UUID leader;
 	protected String name;
 	protected HashMap<UUID,String> member;
-	protected int maxSlot = 1;//ChannelHolder.DEFAULT_SLOT;
+	protected int maxSlot = ChannelData.DEFAULT_SLOT;
 	protected boolean slotLimit = true;
 	protected boolean friendlyFire = false;
 	

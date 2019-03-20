@@ -1,8 +1,10 @@
 package hpms.discordchat.utils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -27,7 +29,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 	}
 	
 	private static HashMap<UUID,PendingInvitation> cachedInvitation = Maps.newHashMap();
-	private static int EXPIRATION = 10;
+	private static int EXPIRATION = 20;
 	
 	private JavaPlugin plugin;
 	private LinkedHashMap<String,Integer> requester = Maps.newLinkedHashMap();
@@ -68,19 +70,46 @@ public class PendingInvitation implements ConfigurationSerializable{
 		
 	}
 	
-	public void addRequester(UUID requester) {
+	public UUID getReceiver() {
+		return this.receiver;
+	}
+	
+	public List<String> getCurrentRequesters() {
+		List<String> list = new ArrayList<>();
+		for(Entry<String,Integer> entry : requester.entrySet()) {
+			if(entry.getValue() != -1) {
+				list.add(entry.getKey());
+			}
+		}
+		return list;
+	}
+	
+	public boolean addRequester(UUID requester) {
+		if(this.requester.containsKey(requester.toString())) return false;
 		this.requester.put(requester.toString(), this.expiration);
 		this.previousRequester = requester;
 		this.invalidate();
 		this.serializeInvitation();
+		return true;
 	}
 	
 	public boolean acceptInvitation(UUID player) {
 		if(!this.requester.containsKey(player.toString())) return false;
+		if(this.requester.get(player.toString()) == -1) return false;
 		this.requester.put(player.toString(), -1);
 		this.previousAccepted = player;
 		this.serializeInvitation();
 		return true;
+	}
+	
+	public void removeAcceptedRequest() {
+		WeakHashMap<String, Integer> map = new WeakHashMap<>();
+		map.putAll(this.requester);
+		for(Entry<String,Integer> entry : map.entrySet()) {
+			if(entry.getValue() == -1) {
+				requester.remove(entry.getKey());
+			}
+ 		}
 	}
 	
 	public ErrorState isAccepted(UUID player) {
@@ -93,20 +122,20 @@ public class PendingInvitation implements ConfigurationSerializable{
 			OfflinePlayer receiver = Bukkit.getServer().getOfflinePlayer(this.receiver);
 			OfflinePlayer previousAccepted = Bukkit.getServer().getOfflinePlayer(this.previousAccepted);
 			if(receiver.isOnline()) {
-				receiver.getPlayer().sendMessage(receive);
+				if(receive.length() != 0) {
+					receiver.getPlayer().sendMessage(receive);
+				}
 			}
 			if(previousAccepted.isOnline()) {
-				previousAccepted.getPlayer().sendMessage(prevAccepted);
+				if(prevAccepted.length() != 0) {
+					previousAccepted.getPlayer().sendMessage(prevAccepted);
+				}
 			}
 		}
 	}
 	
 	public void setPlugin(JavaPlugin plugin) {
 		this.plugin = plugin;
-	}
-	
-	public UUID getReceiver() {
-		return this.receiver;
 	}
 	
 	public YamlConfiguration serializeInvitation() {
@@ -120,23 +149,13 @@ public class PendingInvitation implements ConfigurationSerializable{
 		return config;
 	}
 	
-	public void removeAcceptedRequest() {
-		WeakHashMap<String, Integer> map = new WeakHashMap<>();
-		map.putAll(this.requester);
-		for(Entry<String,Integer> entry : map.entrySet()) {
-			if(entry.getValue() == -1) {
-				requester.remove(entry.getKey());
-			}
- 		}
-	}
-	
 	private void reloadInvitationExpiration() {
 		if(this.requester.size() != 0) {
 			WeakHashMap<String,Integer> copy = new WeakHashMap<>();
 			copy.putAll(this.requester);
 			for(Entry<String,Integer> request : copy.entrySet()) {
 				if(request.getValue() != -1) {
-					new TaskHandler(this.plugin,20,20) {
+					new TaskHandler(receiver,this.plugin,20,20) {
 						private String player = request.getKey();
 						public void run() {
 							if(requester.containsKey(player) && requester.get(player) == 0) {
@@ -146,6 +165,10 @@ public class PendingInvitation implements ConfigurationSerializable{
 							}
 							if(requester.containsKey(player)) {
 								requester.put(player, requester.get(player) - 1);
+							}
+							if(requester.containsKey(player) && requester.get(player) <= -1) {
+								requester.put(player, -1);
+								cancelTask();
 							}
 						}
 					};
@@ -157,7 +180,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 	private void invalidate() {
 		if(this.plugin != null) {
 			if(requester.get(previousRequester.toString()) != -1) {
-				new TaskHandler(this.plugin,20,20) {
+				new TaskHandler(receiver,this.plugin,20,20) {
 					private String player = previousRequester.toString();
 						public void run() {
 							if(requester.containsKey(player) && requester.get(player) == 0) {
@@ -167,6 +190,10 @@ public class PendingInvitation implements ConfigurationSerializable{
 							}
 							if(requester.containsKey(player)) {
 								requester.put(player, requester.get(player) - 1);
+							}
+							if(requester.containsKey(player) && requester.get(player) <= -1) {
+								requester.put(player, -1);
+								cancelTask();
 							}
 						}
 				};
@@ -202,6 +229,22 @@ public class PendingInvitation implements ConfigurationSerializable{
 		}
 		cachedInvitation.put(player, inv);
 		return inv;
+	}
+	
+	public static void reloadAllInvitation() {
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		for(Entry<String,Object> entry : config.getValues(false).entrySet()) {
+			PendingInvitation inv = (PendingInvitation) entry.getValue();
+			inv.setPlugin(DiscordChat.plugin);
+			inv.reloadInvitationExpiration();
+			cachedInvitation.put(UUID.fromString(entry.getKey()), inv);
+		}
+	}
+	
+	public static void saveSerialization() {
+		for(PendingInvitation inv : cachedInvitation.values()) {
+			inv.serializeInvitation();
+		}
 	}
 	
 	public static void debug() {

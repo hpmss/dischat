@@ -74,18 +74,18 @@ public interface ChannelUnit {
 	void setMaxUpgradableSlot(int slot);
 	
 	
-	void requestTeleportation(UUID receiver,UUID requester);
+	boolean requestTeleportation(UUID receiver,UUID requester);
 	
-	void requestInventorySharing(UUID receiver,UUID requester);
+	boolean requestInventorySharing(UUID receiver,UUID requester);
 	
-	void acceptTeleportation(UUID receiver,UUID requester);
+	boolean acceptTeleportation(UUID receiver,UUID requester);
 	
-	void acceptInventorySharing(UUID receiver,UUID requester);
+	boolean acceptInventorySharing(UUID receiver,UUID requester);
 	
-	void toggleTeleportation(UUID receiver);
+	boolean toggleTeleportation(UUID receiver);
 	
-	void toggleExpSharing(UUID member);
+	boolean toggleExpSharing(UUID member);
 
-	void toggleInventorySharing(UUID member);
+	boolean toggleInventorySharing(UUID member);
 	
 }

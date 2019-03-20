@@ -13,6 +13,7 @@ public class DiscordChat extends JavaPlugin{
 	}
 	
 	public void onDisable() {
+		saveData();
 		saveDefaultConfig();
 	}
 	
@@ -23,6 +24,10 @@ public class DiscordChat extends JavaPlugin{
 		this.getServer().getPluginManager().registerEvents(new EventListener(),this);
 		this.getCommand("discordchat").setExecutor(command);
 		this.getCommand("flush").setExecutor(command);
+	}
+	
+	public void saveData() {
+		ChannelAPI.saveData();
 	}
 	
 }

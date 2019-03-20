@@ -11,7 +11,6 @@ import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.data.ChannelData;
 import hpms.discordchat.data.Role;
-import hpms.discordchat.utils.ErrorState;
 import hpms.discordchat.utils.PendingInvitation;
 import net.md_5.bungee.api.ChatColor;
 
@@ -30,6 +29,7 @@ public class OnCommand implements CommandExecutor{
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat create <name> - Create a new channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat remove <name> - Remove a channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> - Join a channel .");
+				sender.sendMessage(ChatColor.YELLOW + "/discordchat joinaccept <name> <player> - Accept a player joining request ( leader required ) .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat prefix <name> <prefix> - Set a channel's chat prefix ( leader required )");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat role <name> <playername> <role> - Set a channel's player role. ( leader required )");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat leaderprefix <name> <prefix> - Set a channel's leader prefix. (leader required) ");
@@ -79,15 +79,15 @@ public class OnCommand implements CommandExecutor{
 						Channel channel = ChannelAPI.getChannelByName(args[1]);
 						
 						PendingInvitation inv = PendingInvitation.deserializeInvitation(channel.getLeader());
-						if(!p.hasPermission("discordchat.bypassjoin")) {
-							inv.addRequester(p.getUniqueId());
-							if(inv.isAccepted(p.getUniqueId()) == ErrorState.SUCCESS) {
-								ChannelAPI.joinChannel(p.getUniqueId(),args[1]);
+//						if(!p.hasPermission("discordchat.bypassjoin")) {
+							boolean b = inv.addRequester(p.getUniqueId());
+							if(b) {
+								p.sendMessage(ChatColor.YELLOW + "Request to join \'" + ChatColor.AQUA + channel.getChannelName() + "\'" + ChatColor.YELLOW + " sent.");
 							}
 							else {
-								p.sendMessage(ChatColor.YELLOW + "You are currently not accepted by leader to join the channel.");
+								p.sendMessage(ChatColor.YELLOW + "Request already sent.");
 							}
-						}
+//						}
 						
 					}else {
 						sender.sendMessage(ChatColor.RED + "Joining a channel for console is currently not supported.");
@@ -119,6 +119,18 @@ public class OnCommand implements CommandExecutor{
 				}
 				else if(args[0].equalsIgnoreCase("leaderprefix")) {
 					ChannelAPI.getChannelByName(args[1]).setRolePrefix(((Player) sender).getUniqueId(), null, args[2]);
+				}
+				else if(args[0].equalsIgnoreCase("joinaccept")) {
+					Channel channel = ChannelAPI.getChannelByName(args[1]);
+					PendingInvitation inv = PendingInvitation.deserializeInvitation(channel.getLeader());
+					boolean b = inv.acceptInvitation(Bukkit.getOfflinePlayer(args[2]).getUniqueId());
+					if(b) {
+						ChannelAPI.joinChannel(Bukkit.getOfflinePlayer(args[2]).getUniqueId(), channel.getChannelName());
+						inv.feedbackMessage(ChatColor.YELLOW + "Player \'" + args[2] + "\' joined your channel.", "");
+					}
+					else {
+						inv.feedbackMessage(ChatColor.YELLOW + "Probably you already accepted the player ?", "");
+					}
 				}
 				else if(args[0].equalsIgnoreCase("removerole")) {
 					switch(ChannelAPI.getChannelByName(args[1]).removeRole(((Player) sender).getUniqueId(), args[2])) {

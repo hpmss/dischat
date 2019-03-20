@@ -2,9 +2,11 @@ package hpms.discordchat.utils;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -28,7 +30,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 	private static int EXPIRATION = 10;
 	
 	private JavaPlugin plugin;
-	private HashMap<String,Integer> requester = Maps.newHashMap();
+	private LinkedHashMap<String,Integer> requester = Maps.newLinkedHashMap();
 	private UUID receiver;
 	private UUID previousRequester;
 	private UUID previousAccepted;
@@ -59,7 +61,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 				this.expiration = Integer.parseInt(data.getValue().toString());
 				break;
 			case "requester" :
-				this.requester = (HashMap<String,Integer>) data.getValue();
+				this.requester = (LinkedHashMap<String,Integer>) data.getValue();
 				break;
 			}
 		}
@@ -107,26 +109,6 @@ public class PendingInvitation implements ConfigurationSerializable{
 		return this.receiver;
 	}
 	
-	private void invalidate() {
-		if(this.plugin != null) {
-			if(requester.get(previousRequester.toString()) != -1) {
-				new TaskHandler(this.plugin,20,20) {
-					private String player = previousRequester.toString();
-						public void run() {
-							if(requester.containsKey(player) && requester.get(player) == 0) {
-								requester.remove(player);
-								serializeInvitation();
-								cancelTask();
-							}
-							if(requester.containsKey(player)) {
-								requester.put(player, requester.get(player) - 1);
-							}
-						}
-				};
-			}
-		}
-	}
-	
 	public YamlConfiguration serializeInvitation() {
 		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
 		config.set(this.receiver.toString(), this);
@@ -138,9 +120,20 @@ public class PendingInvitation implements ConfigurationSerializable{
 		return config;
 	}
 	
+	public void removeAcceptedRequest() {
+		WeakHashMap<String, Integer> map = new WeakHashMap<>();
+		map.putAll(this.requester);
+		for(Entry<String,Integer> entry : map.entrySet()) {
+			if(entry.getValue() == -1) {
+				requester.remove(entry.getKey());
+			}
+ 		}
+	}
+	
 	private void reloadInvitationExpiration() {
 		if(this.requester.size() != 0) {
-			HashMap<String,Integer> copy = Maps.newHashMap(this.requester);
+			WeakHashMap<String,Integer> copy = new WeakHashMap<>();
+			copy.putAll(this.requester);
 			for(Entry<String,Integer> request : copy.entrySet()) {
 				if(request.getValue() != -1) {
 					new TaskHandler(this.plugin,20,20) {
@@ -157,6 +150,26 @@ public class PendingInvitation implements ConfigurationSerializable{
 						}
 					};
 				}
+			}
+		}
+	}
+	
+	private void invalidate() {
+		if(this.plugin != null) {
+			if(requester.get(previousRequester.toString()) != -1) {
+				new TaskHandler(this.plugin,20,20) {
+					private String player = previousRequester.toString();
+						public void run() {
+							if(requester.containsKey(player) && requester.get(player) == 0) {
+								requester.remove(player);
+								serializeInvitation();
+								cancelTask();
+							}
+							if(requester.containsKey(player)) {
+								requester.put(player, requester.get(player) - 1);
+							}
+						}
+				};
 			}
 		}
 	}

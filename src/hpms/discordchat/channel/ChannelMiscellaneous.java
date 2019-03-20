@@ -2,6 +2,8 @@ package hpms.discordchat.channel;
 
 import java.util.UUID;
 
+import hpms.discordchat.utils.Validator;
+
 public class ChannelMiscellaneous extends ChannelEconomy{
 
 	public ChannelMiscellaneous(String name, UUID leader, boolean getFlag) {
@@ -9,7 +11,11 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 	}
 
 	public void requestTeleportation(UUID receiver, UUID requester) {
-	
+		if(Validator.isPlayerOnline(receiver) && Validator.isPlayerOnline(requester)) {
+			
+		}else {
+			
+		}
 	}
 
 	public void requestTrading(UUID receiver, UUID requester) {

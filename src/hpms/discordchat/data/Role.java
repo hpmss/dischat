@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
@@ -206,7 +207,7 @@ public class Role extends RoleConstant{
 		}
 		ChannelCore channel = ChannelData.getChannel(name);
 		if(channel.getMemberList().size() != 0) {
-			HashMap<UUID,String> memberList = new HashMap<UUID,String>();
+			WeakHashMap<UUID,String> memberList = new WeakHashMap<UUID,String>();
 			memberList.putAll(channel.getMemberList());
 			for(Entry<UUID,String> entry : memberList.entrySet()) {
 				if(entry.getValue().equalsIgnoreCase(oldRole)) {

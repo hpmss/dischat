@@ -79,7 +79,7 @@ public class OnCommand implements CommandExecutor{
 						Channel channel = ChannelAPI.getChannelByName(args[1]);
 						
 						PendingInvitation inv = PendingInvitation.deserializeInvitation(channel.getLeader());
-					//	if(!p.hasPermission("discordchat.bypassjoin")) {
+						if(!p.hasPermission("discordchat.bypassjoin")) {
 							inv.addRequester(p.getUniqueId());
 							if(inv.isAccepted(p.getUniqueId()) == ErrorState.SUCCESS) {
 								ChannelAPI.joinChannel(p.getUniqueId(),args[1]);
@@ -87,7 +87,7 @@ public class OnCommand implements CommandExecutor{
 							else {
 								p.sendMessage(ChatColor.YELLOW + "You are currently not accepted by leader to join the channel.");
 							}
-						//}
+						}
 						
 					}else {
 						sender.sendMessage(ChatColor.RED + "Joining a channel for console is currently not supported.");

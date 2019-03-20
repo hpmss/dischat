@@ -46,10 +46,10 @@ public interface ChannelUnit {
 	
 	String getChannelChatPrefix();
 	
-        boolean setRole(UUID setter,UUID member,String prefix);
-    
-        boolean setChannelChatPrefix(UUID setter,String prefix);
-    
+	boolean setRole(UUID setter,UUID member,String prefix);
+	
+	boolean setChannelChatPrefix(UUID setter,String prefix);
+	
 	ErrorState setRolePrefix(UUID setter,String prefix,String chatPrefix);
 	
 	ErrorState addRole(UUID setter,String prefix,boolean makeDefault);

@@ -78,9 +78,9 @@ public interface ChannelUnit {
 	
 	boolean requestInventorySharing(UUID receiver,UUID requester);
 	
-	boolean acceptTeleportation(UUID receiver,UUID requester);
+	boolean acceptTeleportation(UUID receiver);
 	
-	boolean acceptInventorySharing(UUID receiver,UUID requester);
+	boolean acceptInventorySharing(UUID receiver);
 	
 	boolean toggleTeleportation(UUID receiver);
 	

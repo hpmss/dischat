@@ -5,6 +5,9 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import hpms.discordchat.api.ChannelAPI;
+import hpms.discordchat.data.Role;
+
 public class Validator {
 	
 	public static boolean isNotNull(Object obj) {
@@ -28,6 +31,21 @@ public class Validator {
 		OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 		if(player.isOnline()) {
 				return true;
+		}
+		return false;
+	}
+	
+	public static boolean isPlayerOnlineAndJoined(UUID uuid,String channel) {
+		if(isPlayerOnline(uuid) && Role.isPlayerAlreadyJoined(channel, uuid)) {
+			return true;
+		}
+		return false;
+		
+	}
+	
+	public static boolean arePlayersSameChannel(UUID one,UUID two) {
+		if(ChannelAPI.getPlayerCurrentChannelName(one).equalsIgnoreCase(ChannelAPI.getPlayerCurrentChannelName(two))) {
+			return true;
 		}
 		return false;
 	}

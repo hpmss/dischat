@@ -11,12 +11,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 
 import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.channel.Channel;
@@ -30,7 +27,6 @@ public class EventListener implements Listener{
 	private String PLAYER_NAME = "%1$s";
 	private String PLAYER_MESSAGE = "%2$s";
 	private String FORMAT = "[" + "<channelprefix>" + ChatColor.RESET + "][" + "<chatprefix>" + ChatColor.RESET + "]" ;
-	private ItemStack SHARE_ITEM = new ShareItem();
 	
 	
 	@EventHandler
@@ -62,31 +58,32 @@ public class EventListener implements Listener{
 		if(e.getClickedBlock() == null | e.getClickedBlock().getType() == Material.AIR) return;
 	}
 	
-	@EventHandler
-	public void onInventoryOpenEvent(InventoryOpenEvent e) {
-		Player p = (Player) e.getPlayer();
-		SharingInventory shareInv = InventoryLinker.getSharingInventory(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), p);
-		if(shareInv != null) {
-			Log.info("?");
-			Inventory inv = p.getInventory();
-			ItemStack item = inv.getItem(35);
-			ShareItem shareItem = new ShareItem();
-			if(item != null && !item.equals(shareItem)) {
-				p.getWorld().dropItemNaturally(p.getLocation(), item);
-			}
-			inv.setItem(35, shareItem);
-			
-		}
-	}
-	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onInventoryClickEvent(InventoryClickEvent e) {
 		if(e.getCurrentItem() == null) return;
-		if(e.getCurrentItem().isSimilar(SHARE_ITEM)) {
-			Log.info(e.getSlot());
+		Player p = (Player) e.getWhoClicked();
+		SharingInventory shareInv = InventoryLinker.getSharingInventory(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), p);
+		if(shareInv != null) {
+			if(e.getCurrentItem().isSimilar(ShareItem.getItem())) {
+				shareInv.open(p);
+				e.setCancelled(true);
+			}
+			if(!e.getCurrentItem().isSimilar(ShareItem.getItem())) {
+				/*
+				 * Only packet is sent out not the actual inventory contents update
+				 */
+				if(e.getCurrentItem().getType() != Material.AIR) {
+					shareInv.update(p,e.getSlot());
+				}else {
+					shareInv.update(player);
+				}
+				
+			}
+			
 		}
+		
 	}
-	
 	
 	public List<Entity> getNearbyPlayers(Player p,double x,double y,double z) {
 		List<Entity> entities = p.getNearbyEntities(x, y, z);

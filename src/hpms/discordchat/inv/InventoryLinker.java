@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
+import hpms.discordchat.item.ShareItem;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
 
@@ -22,6 +24,7 @@ public class InventoryLinker {
 			link.set(receiver.getUniqueId().toString(), uuid.toString());
 			link.set(requester.getUniqueId().toString(), uuid.toString());
 			SharingInventory.createSharingInventory(uuid.toString(),receiver,requester);
+			updateInventory(receiver,requester);
 			save(channel,link);
 		}else {
 			String invReceiver = null;
@@ -56,6 +59,7 @@ public class InventoryLinker {
 			}
 			link.set(receiver.getUniqueId().toString(), invRequester);
 			link.set(requester.getUniqueId().toString(), invRequester);
+			updateInventory(receiver,requester);
 			save(channel,link);
 		}
 	}
@@ -69,8 +73,19 @@ public class InventoryLinker {
 		if(!FileManager.isFileExist(channel + EXTENSION, PARENT)) return null;
 		YamlConfiguration link = FileManager.getYamlConfiguration(channel + EXTENSION,PARENT);
 		String invUID = link.getString(player.getUniqueId().toString());
-		Log.info(invUID);
 		return SharingInventory.getSharingInventory(invUID);
+	}
+	
+	private static void updateInventory(Player... players) {
+		for(Player p : players) {
+			Inventory inv = p.getInventory();
+			ItemStack item = inv.getItem(35);
+			ItemStack share = ShareItem.getItem();
+			if(item != null && !item.equals(share)) {
+				p.getWorld().dropItemNaturally(p.getLocation(), item);
+			}
+			inv.setItem(35, share);
+		}
 	}
 	
 	private static void save(String channel,YamlConfiguration file) {

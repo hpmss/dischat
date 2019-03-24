@@ -7,18 +7,18 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import net.md_5.bungee.api.ChatColor;
 
-public class ShareItem extends ItemStack{
-	private String name = ChatColor.YELLOW + "Click to next";
-	
-	public ShareItem() {
-		super(Material.PAPER);
-		this.updateItemMeta();
-	}
-	
-	private void updateItemMeta() {
-		ItemMeta meta = this.getItemMeta();
+public class ShareItem{
+	private static String name = ChatColor.YELLOW + "Click to next";
+	private static ItemStack item = new ItemStack(Material.PAPER);;	
+	static {
+		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(name);
 		meta.addEnchant(Enchantment.DURABILITY, 5, true);
-		this.setItemMeta(meta);
+		item.setItemMeta(meta);
 	}
+	
+	public static ItemStack getItem() {
+		return item.clone();
+	}
+	
 }

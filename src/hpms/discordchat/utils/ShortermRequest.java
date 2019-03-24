@@ -3,7 +3,6 @@ package hpms.discordchat.utils;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,8 +53,6 @@ public class ShortermRequest {
 				}
 				else if(form.equalsIgnoreCase("inventory")) {
 					InventoryLinker.createInventoryLinker(ChannelAPI.getPlayerCurrentChannelName(requester.getUniqueId()), receiver, requester);
-					Log.info(requester.getUniqueId());
-					Log.info(receiver.getUniqueId());
 				}
 				receiver.removeMetadata("request", DiscordChat.plugin);
 			}					

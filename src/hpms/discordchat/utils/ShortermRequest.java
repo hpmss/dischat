@@ -3,11 +3,14 @@ package hpms.discordchat.utils;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.chat.DiscordChat;
+import hpms.discordchat.inv.InventoryLinker;
 import net.md_5.bungee.api.ChatColor;
 
 public class ShortermRequest {
@@ -50,7 +53,9 @@ public class ShortermRequest {
 					requester.teleport(receiver.getLocation());
 				}
 				else if(form.equalsIgnoreCase("inventory")) {
-					
+					InventoryLinker.createInventoryLinker(ChannelAPI.getPlayerCurrentChannelName(requester.getUniqueId()), receiver, requester);
+					Log.info(requester.getUniqueId());
+					Log.info(receiver.getUniqueId());
 				}
 				receiver.removeMetadata("request", DiscordChat.plugin);
 			}					

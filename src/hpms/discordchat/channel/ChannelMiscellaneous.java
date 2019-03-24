@@ -15,6 +15,7 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 	}
 
 	public boolean requestTeleportation(UUID receiver, UUID requester) {
+		if(receiver.equals(requester)) return false;
 		if(Validator.isPlayerOnlineAndJoined(receiver,this.name) && Validator.isPlayerOnlineAndJoined(requester, this.name)) {
 			if(Validator.arePlayersSameChannel(receiver, requester)) {
 				ShortermRequest request = ShortermRequest.createRequest(Bukkit.getPlayer(requester), Bukkit.getPlayer(receiver));
@@ -29,6 +30,7 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 	}
 	
 	public boolean requestInventorySharing(UUID receiver, UUID requester) {
+		if(receiver.equals(requester)) return false;
 		if(Validator.isPlayerOnlineAndJoined(receiver,this.name) && Validator.isPlayerOnlineAndJoined(requester, this.name)) {
 			if(Validator.arePlayersSameChannel(receiver, requester)) {
 				ShortermRequest request = ShortermRequest.createRequest(Bukkit.getPlayer(requester), Bukkit.getPlayer(receiver));
@@ -37,7 +39,6 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 				}
 				return true;
 			}
-			return true;
 		}
 		return false;
 	}
@@ -45,8 +46,10 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 	public boolean acceptTeleportation(UUID receiver) {
 		if(Validator.isPlayerOnlineAndJoined(receiver, this.name)) {
 			Player receiv = Bukkit.getPlayer(receiver);
-			ShortermRequest.acceptRequest(receiv,"teleport");
-			return true;
+			if(Validator.arePlayersSameChannel(receiver, receiv.getUniqueId())) {
+				ShortermRequest.acceptRequest(receiv,"teleport");
+				return true;
+			}
 		}
 		return false;
 		
@@ -55,8 +58,10 @@ public class ChannelMiscellaneous extends ChannelEconomy{
 	public boolean acceptInventorySharing(UUID receiver) {
 		if(Validator.isPlayerOnlineAndJoined(receiver, this.name)) {
 			Player receiv = Bukkit.getPlayer(receiver);
-			ShortermRequest.acceptRequest(receiv,"inventory");
-			return true;
+			if(Validator.arePlayersSameChannel(receiver, receiv.getUniqueId())) {
+				ShortermRequest.acceptRequest(receiv,"inventory");
+				return true;
+			}
 		}
 		return false;
 	}

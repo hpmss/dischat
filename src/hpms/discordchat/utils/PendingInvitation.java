@@ -139,10 +139,10 @@ public class PendingInvitation implements ConfigurationSerializable{
 	}
 	
 	public YamlConfiguration serializeInvitation() {
-		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat","data");
 		config.set(this.receiver.toString(), this);
 		try {
-			config.save(FileManager.createNewFile("inv_data.dat"));
+			config.save(FileManager.createNewFile("inv_data.dat","data"));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -217,7 +217,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 		if(inv != null) {
 			return inv;
 		}
-		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat","data");
 		if(config.getValues(false).containsKey(player.toString())) {
 			inv = (PendingInvitation) config.getValues(false).get(player.toString());
 			inv.setPlugin(DiscordChat.plugin);
@@ -232,7 +232,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 	}
 	
 	public static void reloadAllInvitation() {
-		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat");
+		YamlConfiguration config = FileManager.getYamlConfiguration("inv_data.dat","data");
 		for(Entry<String,Object> entry : config.getValues(false).entrySet()) {
 			PendingInvitation inv = (PendingInvitation) entry.getValue();
 			inv.setPlugin(DiscordChat.plugin);

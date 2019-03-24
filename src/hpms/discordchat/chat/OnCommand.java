@@ -26,7 +26,8 @@ public class OnCommand implements CommandExecutor{
 		else if(cmd.getName().equalsIgnoreCase("discordchat") | cmd.getName().equalsIgnoreCase("dc")) {
 			if(args.length == 0) {
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat list - Get a list of channels.");
-				sender.sendMessage(ChatColor.YELLOW + "/discordchat teleport <name> - Request a teleportation for people in the same channel.");
+				sender.sendMessage(ChatColor.YELLOW + "/discordchat teleport <player> - Request a teleportation with player in the same channel.");
+				sender.sendMessage(ChatColor.YELLOW + "/discordchat invshare <player> - Request a inventory sharing with player in the same channel");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat create <name> - Create a new channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat remove <name> - Remove a channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> - Join a channel .");
@@ -59,6 +60,9 @@ public class OnCommand implements CommandExecutor{
 				else if(args[0].equalsIgnoreCase("tpaccept")) {
 					ChannelAPI.getPlayerCurrentChannel(((Player) sender).getUniqueId()).acceptTeleportation(((Player) sender).getUniqueId());
 				}
+				else if(args[0].equalsIgnoreCase("shareaccept")) {
+					ChannelAPI.getPlayerCurrentChannel(((Player) sender).getUniqueId()).acceptInventorySharing(((Player) sender).getUniqueId());
+				}
 			}
 			else if(args.length == 2) {
 				if(args[0].equalsIgnoreCase("create")) {
@@ -80,6 +84,13 @@ public class OnCommand implements CommandExecutor{
 				else if(args[0].equalsIgnoreCase("teleport")) {
 					Player p = (Player) sender;
 					boolean b = ChannelAPI.getPlayerCurrentChannel(p.getUniqueId()).requestTeleportation(Bukkit.getPlayer(args[1]).getUniqueId(), p.getUniqueId());
+					if(b) {
+						p.sendMessage(ChatColor.YELLOW + "Request sent.");
+					}
+				}
+				else if(args[0].equalsIgnoreCase("invshare")) {
+					Player p = (Player) sender;
+					boolean b = ChannelAPI.getPlayerCurrentChannel(p.getUniqueId()).requestInventorySharing(Bukkit.getPlayer(args[1]).getUniqueId(), p.getUniqueId());
 					if(b) {
 						p.sendMessage(ChatColor.YELLOW + "Request sent.");
 					}

@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class FileManager {
@@ -15,7 +16,6 @@ public class FileManager {
 	private static FileConfiguration storageFile;
 	private static FileConfiguration roleFile;
 	private static FileConfiguration configFile;
-	
 	public static void initFileManager(JavaPlugin plugin) {
 		plugin.getDataFolder().mkdir();
 		PATH = plugin.getDataFolder().getPath();
@@ -81,9 +81,29 @@ public class FileManager {
 		return file;
 	}
 	
+	public static File createNewFile(String name,String parent) {
+		File file = new File(PATH + "/" + parent,name);
+		file.getParentFile().mkdirs();
+		createNewFile(file);
+		return file;
+	}
+	
 	public static YamlConfiguration getYamlConfiguration(String name) {
 		YamlConfiguration file = YamlConfiguration.loadConfiguration(createNewFile(name));
 		return file;
+	}
+	
+	public static YamlConfiguration getYamlConfiguration(String name,String parent) {
+		YamlConfiguration file = YamlConfiguration.loadConfiguration(createNewFile(name,parent));
+		return file;
+	}
+	
+	public static boolean isFileExist(String name,String parent) {
+		File file = new File(PATH + "/" + parent,name);
+		if(file.exists()) {
+			return true;
+		}
+		return false;
 	}
 	
 	private static void createNewFile(File file) {

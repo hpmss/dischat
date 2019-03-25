@@ -10,7 +10,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -58,11 +60,11 @@ public class EventListener implements Listener{
 		if(e.getClickedBlock() == null | e.getClickedBlock().getType() == Material.AIR) return;
 	}
 	
-	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onInventoryClickEvent(InventoryClickEvent e) {
-		if(e.getCurrentItem() == null) return;
+		Log.info(e.getAction());
 		Player p = (Player) e.getWhoClicked();
+		if(e.getCurrentItem() == null) return;
 		SharingInventory shareInv = InventoryLinker.getSharingInventory(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), p);
 		if(shareInv != null) {
 			if(e.getCurrentItem().isSimilar(ShareItem.getItem())) {
@@ -73,16 +75,26 @@ public class EventListener implements Listener{
 				/*
 				 * Only packet is sent out not the actual inventory contents update
 				 */
-				if(e.getCurrentItem().getType() != Material.AIR) {
-					shareInv.update(p,e.getSlot());
-				}else {
-					shareInv.update(player);
+				if(e.getAction() == InventoryAction.PLACE_ONE || e.getAction() == InventoryAction.PLACE_SOME||
+						e.getAction() == InventoryAction.PLACE_ALL || e.getAction() == InventoryAction.UNKNOWN) {
+					shareInv.update(p, e.getSlot(), e.getCursor());
 				}
-				
 			}
 			
 		}
-		
+	}
+	
+	@EventHandler
+	public void onInventoryDragEvent(InventoryDragEvent e) {
+		Log.info(e.getType());
+		Player p = (Player) e.getWhoClicked();
+		Log.info(p.getName());
+		SharingInventory shareInv = InventoryLinker.getSharingInventory(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), p);
+		if(shareInv != null) {
+			//Misclick caused by DragEvent
+			shareInv.update(p, ,e.getOldCursor());
+			shareInv.rollback(p);
+		}
 	}
 	
 	public List<Entity> getNearbyPlayers(Player p,double x,double y,double z) {

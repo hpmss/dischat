@@ -3,6 +3,7 @@ package hpms.discordchat.chat;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import hpms.discordchat.api.ChannelAPI;
+import hpms.discordchat.inv.InventoryLinker;
 
 public class DiscordChat extends JavaPlugin{
 	
@@ -10,6 +11,7 @@ public class DiscordChat extends JavaPlugin{
 	
 	public void onEnable() {
 		initDiscordChat();
+		InventoryLinker.deleteInventoryLinker("Market");
 	}
 	
 	public void onDisable() {

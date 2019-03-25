@@ -68,18 +68,23 @@ public class SharingInventory implements MenuUnit{
 		if(this.players.contains(player.getUniqueId().toString())) this.players.remove(player.getUniqueId().toString());
 	}
 	
-	public void update(Player player) {
+	public void update(Player player,int slot,ItemStack item) {
 		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
-		ItemStack[] item = this.storageTracker.get(currentPointer);
-		Log.info(validateStorage(player,item));
 		this.storageTracker.put(currentPointer, player.getInventory().getStorageContents());
+		this.storageTracker.get(currentPointer)[slot] = item;
 		for(Entry<String,String> entry : this.currentPointer.entrySet()) {
 			if(!entry.getKey().equalsIgnoreCase(player.getUniqueId().toString()) && entry.getValue().equalsIgnoreCase(currentPointer)) {
 				Player user = Bukkit.getPlayer(UUID.fromString(entry.getKey()));
 				user.getInventory().setStorageContents(this.storageTracker.get(currentPointer));
+				user.updateInventory();
 			}
 		}
-		this.debug();
+	}
+	
+	public void rollback(Player player) {
+		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
+		player.getInventory().setStorageContents(this.storageTracker.get(currentPointer));
+		player.updateInventory();
 	}
 	
 	private boolean validateStorage(Player player,ItemStack[] storage) {

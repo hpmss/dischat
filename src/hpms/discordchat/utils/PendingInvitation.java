@@ -31,7 +31,7 @@ public class PendingInvitation implements ConfigurationSerializable{
 	private static HashMap<UUID,PendingInvitation> cachedInvitation = Maps.newHashMap();
 	private static int EXPIRATION = 20;
 	
-	private JavaPlugin plugin;
+	private transient JavaPlugin plugin;
 	private LinkedHashMap<String,Integer> requester = Maps.newLinkedHashMap();
 	private UUID receiver;
 	private UUID previousRequester;
@@ -47,9 +47,6 @@ public class PendingInvitation implements ConfigurationSerializable{
 	public PendingInvitation(Map<String,Object> map) {
 		for(Entry<String,Object> data : map.entrySet()) {
 			switch(data.getKey()) {
-			case "plugin" :
-				this.plugin = (JavaPlugin) data.getValue();
-				break;
 			case "receiver" :
 				this.receiver = UUID.fromString(data.getValue().toString());
 				break;
@@ -201,7 +198,6 @@ public class PendingInvitation implements ConfigurationSerializable{
 		}
 	}
 	
-	@Override
 	public Map<String, Object> serialize() {
 		Map<String,Object> map = Maps.newHashMap();
 		map.put("receiver", this.receiver.toString());

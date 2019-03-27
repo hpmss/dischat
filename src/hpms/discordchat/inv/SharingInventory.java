@@ -1,7 +1,8 @@
 package hpms.discordchat.inv;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -16,22 +17,25 @@ import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import hpms.discordchat.api.MenuUnit;
+import net.md_5.bungee.api.ChatColor;
 
 public class SharingInventory implements MenuUnit{
 	
-	/*
-	 * Hot-bar independent
-	 */
-	
 	private static Map<String,SharingInventory> tracker = Maps.newHashMap();
 	
-	private LinkedList<String> players = new LinkedList<String>();
+	private String uid;
+	private String channel;
+	
+	private ArrayList<String> players = new ArrayList<String>();
 	private Map<String,String> currentPointer = Maps.newHashMap();
 	private Map<String,ItemStack[]> storageTracker = Maps.newHashMap();
 	
-	public SharingInventory(Player... players) {
+	public SharingInventory(String channel,String uid,Player... players) {
+		this.uid = uid;
+		this.channel = channel;
 		if(players.length != 0) {
 			for(Player p : players) {
 				this.currentPointer.put(p.getUniqueId().toString(), p.getName());
@@ -54,35 +58,61 @@ public class SharingInventory implements MenuUnit{
 	}
 	
 	public void open(Player player) {
-		if(!this.players.contains(player.getUniqueId().toString())) return;
-		int i = players.indexOf(player.getUniqueId().toString());
+		int i = this.players.indexOf(player.getUniqueId().toString());
+		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
 		try {
-			Player nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i + 1)));
-			this.currentPointer.put(player.getUniqueId().toString(), nextPlayer.getName());
-			ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
-			storage = this.fillin(player,storage);
-			player.getInventory().setStorageContents(storage);
-		}catch(IndexOutOfBoundsException  e) {}
+			if(currentPointer.equalsIgnoreCase(player.getName())) {
+				Player nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i + 1)));
+				this.currentPointer.put(player.getUniqueId().toString(), nextPlayer.getName());
+				ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
+				storage = this.fillin(player,storage);
+				player.getInventory().setStorageContents(storage);
+			}else {
+				i = this.players.indexOf(Bukkit.getPlayer(currentPointer).getUniqueId().toString()) + 1;
+				Player nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
+				this.currentPointer.put(player.getUniqueId().toString(),nextPlayer.getName());
+				ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
+				storage = this.fillin(player,storage);
+				player.getInventory().setStorageContents(storage);
+			}
+		}catch(IndexOutOfBoundsException  e) {player.sendMessage(ChatColor.YELLOW + "You reached the top.");}
 	}
 
 	public void close(Player player) {
-		if(!this.players.contains(player.getUniqueId().toString())) return;
 		int i = players.indexOf(player.getUniqueId().toString());
+		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
 		try {
-			Player previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i - 1)));
-			this.currentPointer.put(player.getUniqueId().toString(), previousPlayer.getName());
-			ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
-			storage = this.fillin(player, storage);
-			player.getInventory().setStorageContents(storage);
-		}catch(IndexOutOfBoundsException e) {}
+			if(currentPointer.equalsIgnoreCase(player.getName())) {
+				Player previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i - 1)));
+				this.currentPointer.put(player.getUniqueId().toString(), previousPlayer.getName());
+				ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
+				storage = this.fillin(player, storage);
+				player.getInventory().setStorageContents(storage);
+			}else {
+				i = this.players.indexOf(Bukkit.getPlayer(currentPointer).getUniqueId().toString()) - 1;
+				Player previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
+				this.currentPointer.put(player.getUniqueId().toString(),previousPlayer.getName());
+				ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
+				storage = this.fillin(player,storage);
+				player.getInventory().setStorageContents(storage);
+			}
+		}catch(IndexOutOfBoundsException e) {player.sendMessage(ChatColor.YELLOW + "You reached the bottom.");}
 	}
 	
 	public void add(Player player) {
-		if(!this.players.contains(player.getUniqueId().toString())) this.players.add(player.getUniqueId().toString());
+		if(!this.players.contains(player.getUniqueId().toString())) {
+			this.players.add(player.getUniqueId().toString());
+			this.currentPointer.put(player.getUniqueId().toString(), player.getName());
+			this.storageTracker.put(player.getName(), this.fillout(player.getInventory().getStorageContents()));
+		}
 	}
 	
 	public void remove(Player player) {
-		if(this.players.contains(player.getUniqueId().toString())) this.players.remove(player.getUniqueId().toString());
+		this.rollback(player);
+		this.players.remove(player.getUniqueId().toString());
+		this.currentPointer.remove(player.getUniqueId().toString());
+		this.storageTracker.remove(player.getName());
+		this.cleanup(this.uid);
 	}
 	
 	public void updateClick(Player player,InventoryClickEvent e) {
@@ -95,13 +125,25 @@ public class SharingInventory implements MenuUnit{
 		case CLONE_STACK:
 			break;
 		case COLLECT_TO_CURSOR:
-			break;
+			/*
+			 * Currently not supported
+			 */
+			player.getInventory().setItem(10, new ItemStack(Material.APPLE));
+			player.getInventory().setItem(10, null);
+			Log.info(player.getOpenInventory().getCursor());
+			for(int i : storageDifferences(storage,this.storageTracker.get(currentPointer))) {
+				Log.info(i);
+			}
+//			e.setCancelled(true);
+			return;
 		case DROP_ALL_CURSOR:
 			if(e.getSlotType() == SlotType.QUICKBAR) return;
 			break;
 		case DROP_ALL_SLOT:
+			if(e.getSlotType() == SlotType.QUICKBAR) return;
 			break;
 		case DROP_ONE_CURSOR:
+			if(e.getSlotType() == SlotType.QUICKBAR) return;
 			break;
 		case DROP_ONE_SLOT:
 			if(e.getSlotType() == SlotType.QUICKBAR) return;
@@ -116,21 +158,20 @@ public class SharingInventory implements MenuUnit{
 			break;
 		case HOTBAR_SWAP:
 			if(slot == e.getHotbarButton()) return;
-			else if(e.getCurrentItem().getType() != Material.AIR) {
-				ItemStack[] playerStorage = player.getInventory().getStorageContents();
-				/*
-				 * TODO
-				 * Hot-bar swap
-				 */
-				if(playerStorage[e.getHotbarButton()] != null) {
-					
-				}
-			}
 			else {
-				if(storage[e.getHotbarButton()] != null) {
-					ItemStack hotbarItem = storage[e.getHotbarButton()].clone();
-					storage[e.getHotbarButton()] = null;
-					storage[slot] = hotbarItem;
+				ItemStack[] playerStorage = player.getInventory().getStorageContents();
+				if(e.getCurrentItem().getType() != Material.AIR) {
+					if(playerStorage[e.getHotbarButton()] != null) {
+						storage[slot] = playerStorage[e.getHotbarButton()];
+					}
+					else {
+						storage[slot] = null;
+					}
+				}
+				else {
+					if(playerStorage[e.getHotbarButton()] != null) {
+						storage[slot] = playerStorage[e.getHotbarButton()];
+					}
 				}
 			}
 			break;
@@ -220,6 +261,15 @@ public class SharingInventory implements MenuUnit{
 		}
 	}
 	
+	public void rollback() {
+		for(String uuid : this.players) {
+			Player p = Bukkit.getPlayer(UUID.fromString(uuid));
+			ItemStack[] storage = this.storageTracker.get(p.getName());
+			storage = this.fillin(p, storage);
+			p.getInventory().setStorageContents(storage);
+		}
+	}
+
 	private void syncClick(String whitelist,String currentPointer,int slot) {
 		Iterator<Entry<String,String>> iter = this.currentPointer.entrySet().iterator();
 		while(iter.hasNext()) {
@@ -245,6 +295,7 @@ public class SharingInventory implements MenuUnit{
 	}
 	
 	private ItemStack[] fillout(ItemStack[] storage) {
+		storage = storage.clone();
 		storage[0] = null;
 		storage[1] = null;
 		storage[2] = null;
@@ -258,6 +309,7 @@ public class SharingInventory implements MenuUnit{
 	}
 	
 	private ItemStack[] fillin(Player player,ItemStack[] storage) {
+		storage = storage.clone();
 		ItemStack[] playerStorage = player.getInventory().getStorageContents();
 		storage[0] = playerStorage[0];
 		storage[1] = playerStorage[1];
@@ -271,9 +323,46 @@ public class SharingInventory implements MenuUnit{
 		return storage;
 	}
 	
-	public static SharingInventory createSharingInventory(String invUID,Player... players) {
+	private void rollback(Player player) {
+		ItemStack[] storage = this.storageTracker.get(player.getName());
+		storage = this.fillin(player, storage);
+		player.getInventory().setStorageContents(storage);
+		for(Entry<String,String> entry : this.currentPointer.entrySet()) {
+			if(!entry.getKey().equalsIgnoreCase(player.getUniqueId().toString()) && entry.getValue().equalsIgnoreCase(player.getName())) {
+				Player user = Bukkit.getPlayer(UUID.fromString(entry.getKey()));
+				storage = this.storageTracker.get(user.getName());
+				storage = this.fillin(user, storage);
+				user.getInventory().setStorageContents(storage);
+				entry.setValue(user.getName());
+			}
+		}
+	}
+	
+	private void cleanup(String invUID) {
+		if(players.size() == 1) {
+			tracker.remove(invUID);
+			InventoryLinker.removePlayerFromFile(this.channel,Bukkit.getPlayer(UUID.fromString(this.players.get(0))));
+			this.currentPointer.clear();
+			this.players.clear();
+			this.storageTracker.clear();
+		}
+	}
+	
+	private Set<Integer> storageDifferences(ItemStack[] storage1 , ItemStack[] storage2) {
+		Set<Integer> set = Sets.newHashSet();
+		for(int i = 9; i < storage1.length;i++) {
+			if(storage1[i] == null && storage2[i] == null) continue;
+			try {
+				storage1[i].isSimilar(storage2[i]);
+			}catch(NullPointerException e) {set.add(i);}
+		}
+		return set;
+	}
+	
+	
+	public static SharingInventory createSharingInventory(String channel,String invUID,Player... players) {
 		if(tracker.containsKey(invUID)) return null;
-		SharingInventory inv = new SharingInventory(players);
+		SharingInventory inv = new SharingInventory(channel,invUID,players);
 		tracker.put(invUID, inv);
 		return inv;
 	}
@@ -283,10 +372,12 @@ public class SharingInventory implements MenuUnit{
 		return tracker.get(invUID);
 	}
 	
-	public void debug() {
-		Log.info("---SharingInventory---");
-		Log.info(this.currentPointer);
-		Log.info(this.storageTracker);
+	public static Collection<SharingInventory> getSharingInventories() {
+		return tracker.values();
+	}
+	
+	public static void debug() {
+		Log.info(tracker);
 	}
 
 }

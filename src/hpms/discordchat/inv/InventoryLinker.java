@@ -1,6 +1,8 @@
 package hpms.discordchat.inv;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -8,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import hpms.discordchat.data.ChannelData;
 import hpms.discordchat.item.ShareItem;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
@@ -23,7 +26,7 @@ public class InventoryLinker {
 			UUID uuid = UUID.randomUUID();
 			link.set(receiver.getUniqueId().toString(), uuid.toString());
 			link.set(requester.getUniqueId().toString(), uuid.toString());
-			SharingInventory.createSharingInventory(uuid.toString(),receiver,requester);
+			SharingInventory.createSharingInventory(channel,uuid.toString(),receiver,requester);
 			updateInventory(receiver,requester);
 			save(channel,link);
 		}else {
@@ -55,18 +58,25 @@ public class InventoryLinker {
 				requesterInv.add(receiver);
 			}else {
 				invRequester = UUID.randomUUID().toString();
-				requesterInv = SharingInventory.createSharingInventory(invRequester,receiver,requester);
+				requesterInv = SharingInventory.createSharingInventory(channel,invRequester,receiver,requester);
 			}
 			link.set(receiver.getUniqueId().toString(), invRequester);
 			link.set(requester.getUniqueId().toString(), invRequester);
 			updateInventory(receiver,requester);
 			save(channel,link);
+			SharingInventory.debug();
 		}
 	}
 	
-	public static void deleteInventoryLinker(String channel) {
-		if(!FileManager.isFileExist(channel + EXTENSION, PARENT)) return;
-		FileManager.createNewFile(channel + EXTENSION, PARENT).delete();
+	public static void deleteInventoryLinkers() {
+		
+		String listString = ChannelData.getChannelList();
+		String[] list = listString.substring(0, listString.length() - 1).split(",");
+		rollbackPlayersInventory();
+		for(String channel : list) {
+			if(!FileManager.isFileExist(channel + EXTENSION, PARENT)) continue;
+			FileManager.createNewFile(channel + EXTENSION, PARENT).delete();
+		}
 	}
 	
 	public static SharingInventory getSharingInventory(String channel,Player player) {
@@ -76,15 +86,44 @@ public class InventoryLinker {
 		return SharingInventory.getSharingInventory(invUID);
 	}
 	
+	public static void removePlayerSharingInventory(String channel,Player player) {
+		SharingInventory inv = getSharingInventory(channel,player);
+		if(inv != null) {
+			inv.remove(player);
+			removePlayerFromFile(channel,player);
+		}
+	}
+	
+	public static void removePlayerFromFile(String channel ,Player player) {
+		YamlConfiguration link = FileManager.getYamlConfiguration(channel + EXTENSION,PARENT);
+		link.set(player.getUniqueId().toString(), null);
+		save(channel,link);
+	}
+	
+	private static void rollbackPlayersInventory() {
+		Collection<SharingInventory> col = SharingInventory.getSharingInventories();
+		Iterator<SharingInventory> iter = col.iterator();
+		while(iter.hasNext()) {
+			SharingInventory shareInv = iter.next();
+			shareInv.rollback();
+		}
+	}
+	
 	private static void updateInventory(Player... players) {
 		for(Player p : players) {
 			Inventory inv = p.getInventory();
-			ItemStack item = inv.getItem(35);
-			ItemStack share = ShareItem.getItem();
-			if(item != null && !item.equals(share)) {
-				p.getWorld().dropItemNaturally(p.getLocation(), item);
+			ItemStack nextItem = inv.getItem(35);
+			ItemStack previousItem = inv.getItem(34);
+			ItemStack shareNext = ShareItem.getNextItem();
+			ItemStack sharePrevious = ShareItem.getPreviousItem();
+			if(nextItem != null && !nextItem.equals(shareNext)) {
+				p.getWorld().dropItemNaturally(p.getLocation(), nextItem);
 			}
-			inv.setItem(35, share);
+			inv.setItem(35, shareNext);
+			if(previousItem != null && !previousItem.equals(sharePrevious)) {
+				p.getWorld().dropItemNaturally(p.getLocation(), previousItem);
+			}
+			inv.setItem(34, sharePrevious);
 		}
 	}
 	

@@ -21,11 +21,18 @@ public abstract class ChannelBackendAPI {
 	}
 	
 	public abstract Channel createNewChannel(String name,UUID leader,boolean getFlag);
+	
 	public abstract Channel getChannelByName(String channelName);
+	
 	public abstract Channel getPlayerCurrentChannel(UUID player);
+	
 	public abstract String getPlayerCurrentChannelName(UUID player);
+	
 	public abstract boolean setChannelChatPrefix(UUID setter,String channelName,String prefix);
+	
 	public abstract boolean setChannelPlayerRole(UUID setter,UUID member,String name,String rank);
+	
 	public abstract void joinChannel(UUID player,String channelName);
+	
 	public abstract void removeChannel(String channelName);
 }

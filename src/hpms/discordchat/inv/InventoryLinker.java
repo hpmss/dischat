@@ -14,6 +14,7 @@ import hpms.discordchat.data.ChannelData;
 import hpms.discordchat.item.ShareItem;
 import hpms.discordchat.utils.FileManager;
 import hpms.discordchat.utils.Validator;
+import net.md_5.bungee.api.ChatColor;
 
 public class InventoryLinker {
 	
@@ -51,6 +52,7 @@ public class InventoryLinker {
 				receiverInv = SharingInventory.getSharingInventory(invReceiver);
 				Validator.isNotNull(receiverInv);
 				receiverInv.remove(receiver);
+				link = FileManager.getYamlConfiguration(channel + EXTENSION, PARENT);
 			}
 			if(invRequester != null) {
 				requesterInv = SharingInventory.getSharingInventory(invRequester);
@@ -64,7 +66,6 @@ public class InventoryLinker {
 			link.set(requester.getUniqueId().toString(), invRequester);
 			updateInventory(receiver,requester);
 			save(channel,link);
-			SharingInventory.debug();
 		}
 	}
 	
@@ -91,6 +92,7 @@ public class InventoryLinker {
 		if(inv != null) {
 			inv.remove(player);
 			removePlayerFromFile(channel,player);
+			player.sendMessage(ChatColor.YELLOW + "Successfully stopped inventory sharing.");
 		}
 	}
 	
@@ -98,6 +100,7 @@ public class InventoryLinker {
 		YamlConfiguration link = FileManager.getYamlConfiguration(channel + EXTENSION,PARENT);
 		link.set(player.getUniqueId().toString(), null);
 		save(channel,link);
+		
 	}
 	
 	private static void rollbackPlayersInventory() {
@@ -109,7 +112,7 @@ public class InventoryLinker {
 		}
 	}
 	
-	private static void updateInventory(Player... players) {
+	public static void updateInventory(Player... players) {
 		for(Player p : players) {
 			Inventory inv = p.getInventory();
 			ItemStack nextItem = inv.getItem(35);
@@ -129,7 +132,7 @@ public class InventoryLinker {
 	
 	private static void save(String channel,YamlConfiguration file) {
 		try {
-			file.save(FileManager.createNewFile(channel + ".invl", PARENT));
+			file.save(FileManager.createNewFile(channel + EXTENSION, PARENT));
 		}catch(IOException e) {e.printStackTrace();}
 	}
 }

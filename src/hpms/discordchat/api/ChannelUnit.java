@@ -25,8 +25,6 @@ public interface ChannelUnit {
 	
 	Map<UUID,String> getMemberList();
 	
-	void setChannelName(String name);
-	
 	void setLeader(UUID leader);
 	
 	void setLeaderChatPrefix(String prefix);
@@ -34,8 +32,6 @@ public interface ChannelUnit {
 	void setMaxSlot(int maxSlot);
 	
 	void setSlotLimit(boolean b);
-	
-	void setFriendlyFire(boolean b);
 	
 	boolean isPlayerAlreadyJoined(UUID uuid);
 	

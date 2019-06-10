@@ -8,5 +8,4 @@ public class Channel extends ChannelMiscellaneous{
 		super(name, leader, getFlag);
 	}
 
-
 }

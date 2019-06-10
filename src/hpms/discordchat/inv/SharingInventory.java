@@ -12,17 +12,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 import hpms.discordchat.api.MenuUnit;
+import hpms.discordchat.item.ShareItem;
 import net.md_5.bungee.api.ChatColor;
 
 public class SharingInventory implements MenuUnit{
+	/*
+	 * Fix update inventory when pickup item
+	 */
 	
 	private static Map<String,SharingInventory> tracker = Maps.newHashMap();
 	
@@ -52,6 +57,14 @@ public class SharingInventory implements MenuUnit{
 	public String getName() {
 		return null;
 	}
+	
+	public ArrayList<Player> getPlayers() {
+		ArrayList<Player> list = new ArrayList<>();
+		for(String s : players) {
+			list.add(Bukkit.getPlayer(UUID.fromString(s)));
+		}
+		return list;
+	}
 
 	public boolean isEditable() {
 		return true;
@@ -60,42 +73,40 @@ public class SharingInventory implements MenuUnit{
 	public void open(Player player) {
 		int i = this.players.indexOf(player.getUniqueId().toString());
 		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
+		Player nextPlayer = null;
 		try {
 			if(currentPointer.equalsIgnoreCase(player.getName())) {
-				Player nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i + 1)));
-				this.currentPointer.put(player.getUniqueId().toString(), nextPlayer.getName());
-				ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
-				storage = this.fillin(player,storage);
-				player.getInventory().setStorageContents(storage);
+				nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i + 1)));
+			
 			}else {
 				i = this.players.indexOf(Bukkit.getPlayer(currentPointer).getUniqueId().toString()) + 1;
-				Player nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
-				this.currentPointer.put(player.getUniqueId().toString(),nextPlayer.getName());
-				ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
-				storage = this.fillin(player,storage);
-				player.getInventory().setStorageContents(storage);
+				nextPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
 			}
+			this.currentPointer.put(player.getUniqueId().toString(), nextPlayer.getName());
+			ItemStack[] storage = this.storageTracker.get(nextPlayer.getName());
+			storage = this.fillin(player,storage);
+			player.getInventory().setStorageContents(storage);
+			player.sendMessage(ChatColor.YELLOW + "Current inventory: " + ChatColor.GREEN + nextPlayer.getName());
 		}catch(IndexOutOfBoundsException  e) {player.sendMessage(ChatColor.YELLOW + "You reached the top.");}
 	}
 
 	public void close(Player player) {
 		int i = players.indexOf(player.getUniqueId().toString());
 		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
+		Player previousPlayer = null;
 		try {
 			if(currentPointer.equalsIgnoreCase(player.getName())) {
-				Player previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i - 1)));
-				this.currentPointer.put(player.getUniqueId().toString(), previousPlayer.getName());
-				ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
-				storage = this.fillin(player, storage);
-				player.getInventory().setStorageContents(storage);
+				previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i - 1)));
+				
 			}else {
 				i = this.players.indexOf(Bukkit.getPlayer(currentPointer).getUniqueId().toString()) - 1;
-				Player previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
-				this.currentPointer.put(player.getUniqueId().toString(),previousPlayer.getName());
-				ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
-				storage = this.fillin(player,storage);
-				player.getInventory().setStorageContents(storage);
+				previousPlayer = Bukkit.getServer().getPlayer(UUID.fromString(players.get(i)));
 			}
+			this.currentPointer.put(player.getUniqueId().toString(), previousPlayer.getName());
+			ItemStack[] storage = this.storageTracker.get(previousPlayer.getName());
+			storage = this.fillin(player, storage);
+			player.getInventory().setStorageContents(storage);
+			player.sendMessage(ChatColor.YELLOW + "Current inventory: " + ChatColor.GREEN + previousPlayer.getName());
 		}catch(IndexOutOfBoundsException e) {player.sendMessage(ChatColor.YELLOW + "You reached the bottom.");}
 	}
 	
@@ -108,140 +119,140 @@ public class SharingInventory implements MenuUnit{
 	}
 	
 	public void remove(Player player) {
+		player.getInventory().setItem(34, null);
+		player.getInventory().setItem(35, null);
 		this.rollback(player);
 		this.players.remove(player.getUniqueId().toString());
 		this.currentPointer.remove(player.getUniqueId().toString());
 		this.storageTracker.remove(player.getName());
+		this.notifyPlayers(player);
 		this.cleanup(this.uid);
+		
 	}
 	
 	public void updateClick(Player player,InventoryClickEvent e) {
-		String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
-		ItemStack[] storage = player.getInventory().getStorageContents();
-		storage = this.fillout(storage);
-		int slot = e.getSlot();
-		ItemStack slotItem = storage[slot];
-		switch(e.getAction()) {
-		case CLONE_STACK:
-			break;
-		case COLLECT_TO_CURSOR:
-			/*
-			 * Currently not supported
-			 */
-			player.getInventory().setItem(10, new ItemStack(Material.APPLE));
-			player.getInventory().setItem(10, null);
-			Log.info(player.getOpenInventory().getCursor());
-			for(int i : storageDifferences(storage,this.storageTracker.get(currentPointer))) {
-				Log.info(i);
-			}
-//			e.setCancelled(true);
-			return;
-		case DROP_ALL_CURSOR:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			break;
-		case DROP_ALL_SLOT:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			break;
-		case DROP_ONE_CURSOR:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			break;
-		case DROP_ONE_SLOT:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			if(true) {
-				ItemStack item = e.getCurrentItem().clone();
-				item.setAmount(item.getAmount() - 1);
-				slotItem = item;
-			}
-			storage[slot] = slotItem;
-			break;
-		case HOTBAR_MOVE_AND_READD:
-			break;
-		case HOTBAR_SWAP:
-			if(slot == e.getHotbarButton()) return;
-			else {
-				ItemStack[] playerStorage = player.getInventory().getStorageContents();
-				if(e.getCurrentItem().getType() != Material.AIR) {
-					if(playerStorage[e.getHotbarButton()] != null) {
-						storage[slot] = playerStorage[e.getHotbarButton()];
-					}
-					else {
-						storage[slot] = null;
-					}
-				}
-				else {
-					if(playerStorage[e.getHotbarButton()] != null) {
-						storage[slot] = playerStorage[e.getHotbarButton()];
-					}
-				}
-			}
-			break;
-		case MOVE_TO_OTHER_INVENTORY:
-			if(e.getSlotType() == SlotType.QUICKBAR) e.setCancelled(true);
-			break;
-		case PICKUP_ALL:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			storage[slot] = null;
-			break;
-		case PICKUP_HALF:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			slotItem.setAmount(slotItem.getAmount() - e.getCursor().getAmount());
-			storage[slot] = slotItem;
-			break;
-		case PICKUP_ONE:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			slotItem.setAmount(slotItem.getAmount() - 1);
-			storage[slot] = slotItem;
-			break;
-		case PICKUP_SOME:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			slotItem.setAmount(slotItem.getAmount() - e.getCursor().getAmount());
-			storage[slot] = slotItem;
-			break;
-		case PLACE_ALL:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			if(e.getCurrentItem().getType() != Material.AIR) {
-				ItemStack item = e.getCurrentItem().clone();
-				item.setAmount(item.getAmount() + e.getCursor().getAmount());
-				slotItem = item;
-			}else {
-				slotItem = e.getCursor();
-			}
-			storage[slot] = slotItem;
-			break;
-		case PLACE_ONE:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			if(e.getCurrentItem().getType() != Material.AIR) {
-				ItemStack item = e.getCurrentItem().clone();
-				item.setAmount(item.getAmount() + 1);
-				slotItem = item;
-			}else {
-				ItemStack item = e.getCursor().clone();
-				item.setAmount(1);
-				slotItem = item;
-			}
-			storage[slot] = slotItem;
-			break;
-		case PLACE_SOME:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			if(true) {
-				ItemStack item = e.getCurrentItem().clone();
-				item.setAmount(64);
-				slotItem = item;
-			}
-			storage[slot] = slotItem;
-			break;
-		case SWAP_WITH_CURSOR:
-			if(e.getSlotType() == SlotType.QUICKBAR) return;
-			if(true) {
-				slotItem = e.getCursor();
-			}
-			storage[slot] = slotItem;
-			break;
-		default:
+		if(e.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
+			e.setCancelled(true);
 			return;
 		}
-		this.storageTracker.put(currentPointer,storage);
-		this.syncClick(player.getUniqueId().toString(),currentPointer,slot);
+		if(e.getClickedInventory().getType() == InventoryType.PLAYER) {
+			String currentPointer = this.currentPointer.get(player.getUniqueId().toString());
+			ItemStack[] storage = player.getInventory().getStorageContents();
+			storage = this.fillout(storage);
+			int slot = e.getSlot();
+			if(slot == 34 || slot == 35) return;
+			ItemStack slotItem = storage[slot];
+			switch(e.getAction()) {
+			case CLONE_STACK:
+				break;
+			case DROP_ALL_CURSOR:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				break;
+			case DROP_ALL_SLOT:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				break;
+			case DROP_ONE_CURSOR:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				break;
+			case DROP_ONE_SLOT:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				if(true) {
+					ItemStack item = e.getCurrentItem().clone();
+					item.setAmount(item.getAmount() - 1);
+					slotItem = item;
+				}
+				storage[slot] = slotItem;
+				break;
+			case HOTBAR_MOVE_AND_READD:
+				break;
+			case HOTBAR_SWAP:
+				if(slot == e.getHotbarButton()) return;
+				else {
+					ItemStack[] playerStorage = player.getInventory().getStorageContents();
+					if(e.getCurrentItem().getType() != Material.AIR) {
+						if(playerStorage[e.getHotbarButton()] != null) {
+							storage[slot] = playerStorage[e.getHotbarButton()];
+						}
+						else {
+							storage[slot] = null;
+						}
+					}
+					else {
+						if(playerStorage[e.getHotbarButton()] != null) {
+							storage[slot] = playerStorage[e.getHotbarButton()];
+						}
+					}
+				}
+				break;
+			case MOVE_TO_OTHER_INVENTORY:
+				if(e.getSlotType() == SlotType.QUICKBAR) e.setCancelled(true);
+				break;
+			case PICKUP_ALL:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				storage[slot] = null;
+				break;
+			case PICKUP_HALF:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				slotItem.setAmount(slotItem.getAmount() - e.getCursor().getAmount());
+				storage[slot] = slotItem;
+				break;
+			case PICKUP_ONE:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				slotItem.setAmount(slotItem.getAmount() - 1);
+				storage[slot] = slotItem;
+				break;
+			case PICKUP_SOME:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				slotItem.setAmount(slotItem.getAmount() - e.getCursor().getAmount());
+				storage[slot] = slotItem;
+				break;
+			case PLACE_ALL:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				if(e.getCurrentItem().getType() != Material.AIR) {
+					ItemStack item = e.getCurrentItem().clone();
+					item.setAmount(item.getAmount() + e.getCursor().getAmount());
+					slotItem = item;
+				}else {
+					slotItem = e.getCursor();
+				}
+				storage[slot] = slotItem;
+				break;
+			case PLACE_ONE:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				if(e.getCurrentItem().getType() != Material.AIR) {
+					ItemStack item = e.getCurrentItem().clone();
+					item.setAmount(item.getAmount() + 1);
+					slotItem = item;
+				}else {
+					ItemStack item = e.getCursor().clone();
+					item.setAmount(1);
+					slotItem = item;
+				}
+				storage[slot] = slotItem;
+				break;
+			case PLACE_SOME:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				if(true) {
+					ItemStack item = e.getCurrentItem().clone();
+					item.setAmount(64);
+					slotItem = item;
+				}
+				storage[slot] = slotItem;
+				break;
+			case SWAP_WITH_CURSOR:
+				if(e.getSlotType() == SlotType.QUICKBAR) return;
+				if(true) {
+					slotItem = e.getCursor();
+				}
+				storage[slot] = slotItem;
+				break;
+			default:
+				return;
+			}
+			this.storageTracker.put(currentPointer,storage);
+			this.syncClick(player.getUniqueId().toString(),currentPointer,slot);
+		}
+		
 	}
 	
 	public void updateDrag(Player player,Map<Integer,ItemStack> map) {
@@ -266,6 +277,8 @@ public class SharingInventory implements MenuUnit{
 			Player p = Bukkit.getPlayer(UUID.fromString(uuid));
 			ItemStack[] storage = this.storageTracker.get(p.getName());
 			storage = this.fillin(p, storage);
+			storage[34] = null;
+			storage[35] = null;
 			p.getInventory().setStorageContents(storage);
 		}
 	}
@@ -333,32 +346,31 @@ public class SharingInventory implements MenuUnit{
 				storage = this.storageTracker.get(user.getName());
 				storage = this.fillin(user, storage);
 				user.getInventory().setStorageContents(storage);
+				user.getInventory().setItem(35, ShareItem.getNextItem());
+				user.getInventory().setItem(34, ShareItem.getPreviousItem());
 				entry.setValue(user.getName());
 			}
 		}
 	}
 	
 	private void cleanup(String invUID) {
-		if(players.size() == 1) {
+		if(this.players.size() == 1) {
 			tracker.remove(invUID);
-			InventoryLinker.removePlayerFromFile(this.channel,Bukkit.getPlayer(UUID.fromString(this.players.get(0))));
+			Player p = Bukkit.getPlayer(UUID.fromString(this.players.get(0)));
+			p.getInventory().setItem(34, null);
+			p.getInventory().setItem(35, null);
+			InventoryLinker.removePlayerFromFile(this.channel,p);
 			this.currentPointer.clear();
 			this.players.clear();
 			this.storageTracker.clear();
 		}
 	}
 	
-	private Set<Integer> storageDifferences(ItemStack[] storage1 , ItemStack[] storage2) {
-		Set<Integer> set = Sets.newHashSet();
-		for(int i = 9; i < storage1.length;i++) {
-			if(storage1[i] == null && storage2[i] == null) continue;
-			try {
-				storage1[i].isSimilar(storage2[i]);
-			}catch(NullPointerException e) {set.add(i);}
+	private void notifyPlayers(Player whoLeft) {
+		for(Player p : this.getPlayers()) {
+			p.sendMessage(ChatColor.GREEN + whoLeft.getName() + ChatColor.YELLOW +" stopped inventory sharing.");
 		}
-		return set;
 	}
-	
 	
 	public static SharingInventory createSharingInventory(String channel,String invUID,Player... players) {
 		if(tracker.containsKey(invUID)) return null;

@@ -20,7 +20,7 @@ public class ShortermRequest {
 	
 	private boolean isSent = false;
 	
-	public ShortermRequest(JavaPlugin plugin,Player requester,Player receiver) {
+	public ShortermRequest(JavaPlugin plugin,Player requester,Player receiver,String form) {
 		this.receiver = receiver;
 		if(this.receiver.hasMetadata("request")) {
 			String uuid = this.receiver.getMetadata("request").get(0).value().toString();
@@ -32,15 +32,23 @@ public class ShortermRequest {
 		}
 		this.receiver.setMetadata("request",new FixedMetadataValue(plugin,requester.getUniqueId().toString()));
 		this.request(plugin);
-		this.receiver.sendMessage(ChatColor.YELLOW + "A request has been sent to you by " + requester.getDisplayName());
+		switch(form) {
+		case "inventory":
+			this.receiver.sendMessage(ChatColor.YELLOW + "A " + ChatColor.GREEN + "inventory sharing" + ChatColor.YELLOW +" request has been sent to you by " + requester.getDisplayName());
+			break;
+		case "teleport":
+			this.receiver.sendMessage(ChatColor.YELLOW + "A " + ChatColor.GREEN + "teleport" + ChatColor.YELLOW +" request has been sent to you by " + requester.getDisplayName());
+			break;
+		}
+		
 	}
 	
 	public boolean isSent() {
 		return this.isSent;
 	}
 	
-	public static ShortermRequest createRequest(Player requester,Player receiver) {
-		return new ShortermRequest(DiscordChat.plugin,requester,receiver);
+	public static ShortermRequest createRequest(Player requester,Player receiver,String form) {
+		return new ShortermRequest(DiscordChat.plugin,requester,receiver,form);
 	}
 	
 	public static void acceptRequest(Player receiver,String form) {
@@ -50,12 +58,18 @@ public class ShortermRequest {
 			if(Validator.isPlayerOnline(requester.getUniqueId())) {
 				if(form.equalsIgnoreCase("teleport")) {
 					requester.teleport(receiver.getLocation());
+					requester.sendMessage(ChatColor.YELLOW + "Teleport request accepted.");
+					receiver.sendMessage(ChatColor.YELLOW + "You accepted teleport request.");
 				}
 				else if(form.equalsIgnoreCase("inventory")) {
 					InventoryLinker.createInventoryLinker(ChannelAPI.getPlayerCurrentChannelName(requester.getUniqueId()), receiver, requester);
+					requester.sendMessage(ChatColor.YELLOW + "Inventory sharing request accepted.");
+					receiver.sendMessage(ChatColor.YELLOW + "You accepted inventory sharing request.");
 				}
 				receiver.removeMetadata("request", DiscordChat.plugin);
 			}					
+		}else {
+			receiver.sendMessage(ChatColor.YELLOW + "You dont have any pending request.");
 		}
 	}
 	

@@ -23,22 +23,29 @@ public class ChannelBackend extends ChannelBackendAPI {
 	}
 
 	public Channel createNewChannel(String name, UUID leader, boolean getFlag) {
-		OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
-		if(ChannelData.isPlayerLeader(leader))  {
-			if(player.isOnline()) {
-				if(!player.getPlayer().hasPermission("discordchat.multiplechannel")) {
-					player.getPlayer().sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
-					return null;
+		if(leader == null && name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+			Channel channel = new Channel(name,null,getFlag);
+			ChannelData.cacheChannel(channel);
+			return null;
+		}else {
+			OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
+			if(ChannelData.isPlayerLeader(leader))  {
+				if(player.isOnline()) {
+					if(!player.getPlayer().hasPermission("discordchat.multiplechannel")) {
+						player.getPlayer().sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
+						return null;
+					}
 				}
 			}
+			if(this.getPlayerCurrentChannel(leader) != null) {
+				this.getPlayerCurrentChannel(leader).removeMember(leader,false);
+			}
+			Channel channel = new Channel(name,leader,getFlag);
+			ChannelData.cacheChannel(channel);
+			ChannelData.cacheLeader(leader.toString());
+			return channel;
 		}
-		if(this.getPlayerCurrentChannel(leader) != null) {
-			this.getPlayerCurrentChannel(leader).removeMember(leader,false);
-		}
-		Channel channel = new Channel(name,leader,getFlag);
-		ChannelData.cacheChannel(channel);
-		ChannelData.cacheLeader(leader.toString());
-		return channel;
+		
 	}
 
 	public Channel getChannelByName(String channelName) {
@@ -91,5 +98,6 @@ public class ChannelBackend extends ChannelBackendAPI {
 		Role.remove(channelName);
 		ChannelData.remove(channelName);
 	}
+	
 
 }

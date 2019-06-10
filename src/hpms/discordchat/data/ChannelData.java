@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.craftbukkit.libs.jline.internal.Log;
 
+import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.channel.ChannelCore;
 import hpms.discordchat.utils.ErrorState;
@@ -27,6 +28,9 @@ public class ChannelData extends ChannelDataConstant{
 
 	public static void initChannelHolder() {
 		Set<String> channelSet = storageSection.getKeys(false);
+		if(channelSet.size() == 0) {
+			ChannelAPI.createNewChannel(ChannelDataConstant.DEFAULT_CHANNEL, null, false);
+		}
 		for(String channel : channelSet) {
 			String uuid = storageSection.getConfigurationSection(channel).getString(LEADER);
 			Map<String,Object> memberList = storageSection.getConfigurationSection(channel).getConfigurationSection(LIST).getValues(false);
@@ -35,19 +39,22 @@ public class ChannelData extends ChannelDataConstant{
 					cachedPlayerCurrentChannel.put(UUID.fromString(entry.getKey()),channel);
 				}
 			}
-			cachedLeader.add(uuid);
+			if(!channel.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+				cachedLeader.add(uuid);
+			}
 		}
 	}
 	
 	public static void put(ChannelCore channel) {
 		ConfigurationSection channelSection = null;
 		if(isChannelExisted(channel.getChannelName())) {
+
 			channelSection = storageSection.getConfigurationSection(channel.getChannelName());
 		}
 		else {
 			channelSection = storageSection.createSection(channel.getChannelName());
 		}
-		channelSection.set(LEADER, channel.getLeader().toString());
+		channelSection.set(LEADER, (channel.getLeader() == null) ? "NO_LEADER" : channel.getLeader().toString());
 		channelSection.set(SLOT,channel.getMaxSize());
 		ConfigurationSection list = channelSection.createSection(LIST);
 		for(Entry<UUID,String> member : channel.getMemberList().entrySet()) {
@@ -89,12 +96,18 @@ public class ChannelData extends ChannelDataConstant{
 		}
 		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
 		Validator.isNotNull(channelSection,"channel \'" + name + "\' doesnt exist.");
-		UUID leader = UUID.fromString(channelSection.getString(LEADER));
+		UUID leader = null;
+		if(!name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+			leader = UUID.fromString(channelSection.getString(LEADER));
+		}
 		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection(LIST).getValues(false);
 		int slot = channelSection.getInt(SLOT);
 		channel = new Channel(name, leader,true);
 		channel.setMaxSlot(slot);
 		channel.overrideMember(memberList);
+		if(name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+			channel.setSlotLimit(false);
+		}
 		cacheChannel(channel);
 		return channel;
 	}

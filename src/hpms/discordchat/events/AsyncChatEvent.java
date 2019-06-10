@@ -24,6 +24,11 @@ public class AsyncChatEvent implements Listener{
 	public void onAsyncPlayerChatEvent(AsyncPlayerChatEvent e) {
 		if(!ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId()).getChannelName().equalsIgnoreCase(ChannelData.DEFAULT_CHANNEL)) {
 			List<Entity> players = getNearbyPlayers(e.getPlayer(),10,10,10);
+			for(Player p : e.getRecipients()) {
+				if(p.hasPermission("dc.godhear")) {
+					players.add(p);
+				}
+			}
 			e.getRecipients().clear();
 			e.getRecipients().add(e.getPlayer());
 			for(Entity p : players) {

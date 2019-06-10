@@ -24,7 +24,7 @@ public class Role extends RoleConstant{
 	
 	public static void initRole() {
 		Set<String> channelSet = roleSection.getKeys(false);
-		for(String name : channelSet) {
+		for(String name : channelSet) {								
 			ConfigurationSection roleConfig = roleSection.getConfigurationSection(name).getConfigurationSection(MEMBER);
 			Map<String,Object> config = roleConfig.getValues(true);
 			for(Entry<String,Object> entry : config.entrySet()) {
@@ -46,8 +46,9 @@ public class Role extends RoleConstant{
 			ConfigurationSection memberConfig = section.createSection(MEMBER);
 			ConfigurationSection roleConfig = section.createSection(ROLE);
 			leaderConfig.set(PREFIX, DEFAULT_LEADER_PREFIX);
-			roleConfig.set(channel.getLeader().toString(), DEFAULT_LEADER_PREFIX);
-			
+			if(channel.getLeader() != null) {
+				roleConfig.set(channel.getLeader().toString(), DEFAULT_LEADER_PREFIX);
+			}
 			ConfigurationSection memberConfigPrefix = memberConfig.createSection(ChatColor.stripColor(DEFAULT_MEMBER_PREFIX));
 			memberConfigPrefix.set(DEFAULT, true);
 			memberConfigPrefix.set(PREFIX, DEFAULT_MEMBER_PREFIX);

@@ -10,6 +10,7 @@ import org.bukkit.OfflinePlayer;
 
 import hpms.discordchat.api.ChannelUnit;
 import hpms.discordchat.data.ChannelData;
+import hpms.discordchat.data.ChannelDataConstant;
 import hpms.discordchat.data.Role;
 import hpms.discordchat.utils.Validator;
 
@@ -20,20 +21,25 @@ public abstract class ChannelCore implements ChannelUnit{
 	protected HashMap<UUID,String> member;
 	protected int maxSlot = ChannelData.DEFAULT_SLOT;
 	protected boolean slotLimit = true;
-	protected boolean friendlyFire = false;
 	
 	public ChannelCore(String name,UUID leader,boolean getFlag) {
 		this.name = name;
 		this.member = new HashMap<UUID,String>();
-		this.leader = leader;
-		OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
-		if(player.isOnline()) {
-			if(!player.getPlayer().hasPermission("discordchat.overridechannel")) {
-				Validator.isTrue(!ChannelData.isChannelExisted(name));
+		if(!name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+			this.leader = leader;
+			OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
+			if(player.isOnline()) {
+				if(!player.getPlayer().hasPermission("discordchat.overridechannel")) {
+					Validator.isTrue(!ChannelData.isChannelExisted(name));
+				}
 			}
+		}else {
+			this.leader = null;
+			this.slotLimit = false;
+			this.maxSlot = 999;
 		}
 		Role.put(this,getFlag);
-		if(getFlag == false) {
+		if(getFlag == false && leader != null) {
 			this.member.put(this.leader, Role.getLeaderPrefix(this.name));
 		}
 		ChannelData.put(this);
@@ -109,8 +115,12 @@ public abstract class ChannelCore implements ChannelUnit{
 	}
 	
 	public void setLeader(UUID leader) {
-		this.leader = leader;
-		ChannelData.put(this);
+		if(!this.name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+			Role.update(this.name, this.leader, Role.getInitialRole(this.name));
+			this.leader = leader;
+			ChannelData.put(this);
+			Role.update(this.name, this.leader, Role.getLeaderPrefix(this.name));
+		}
 	}
 	
 	public void setLeaderChatPrefix(String prefix) {
@@ -127,10 +137,6 @@ public abstract class ChannelCore implements ChannelUnit{
 	
 	public void setSlotLimit(boolean b) {
 		this.slotLimit = b;
-	}
-	
-	public void setFriendlyFire(boolean b) {
-		this.friendlyFire = b;
 	}
 	
 	public boolean isPlayerAlreadyJoined(UUID uuid) {

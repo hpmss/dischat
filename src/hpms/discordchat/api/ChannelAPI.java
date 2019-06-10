@@ -33,8 +33,8 @@ public class ChannelAPI {
 		return ChannelBackendAPI.getAPI().setChannelChatPrefix(setter, channelName, prefix);
 	}
 	
-	public static boolean setChannelPlayerRole(UUID setter,UUID member,String channelName,String rank) {
-		return ChannelBackendAPI.getAPI().setChannelPlayerRole(setter, member, channelName, rank);
+	public static boolean setChannelPlayerRole(UUID setter,UUID member,String channelName,String role) {
+		return ChannelBackendAPI.getAPI().setChannelPlayerRole(setter, member, channelName, role);
 	}
 	
 	public static Channel getChannelByName(String channelName) {

@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import hpms.discordchat.inv.InventoryLinker;
 import hpms.discordchat.utils.ShortermRequest;
 import hpms.discordchat.utils.Validator;
+import net.md_5.bungee.api.ChatColor;
 
 public abstract class ChannelMiscellaneous extends ChannelEconomy{
 
@@ -16,7 +17,10 @@ public abstract class ChannelMiscellaneous extends ChannelEconomy{
 	}
 
 	public boolean requestTeleportation(UUID receiver, UUID requester) {
-		if(receiver.equals(requester)) return false;
+		if(receiver.equals(requester)) {
+			Bukkit.getPlayer(receiver).sendMessage(ChatColor.YELLOW + "You cant teleport to yourself.");
+			return false;
+		}
 		if(Validator.isPlayerOnlineAndJoined(receiver,this.name) && Validator.isPlayerOnlineAndJoined(requester, this.name)) {
 			if(Validator.arePlayersSameChannel(receiver, requester)) {
 				ShortermRequest request = ShortermRequest.createRequest(Bukkit.getPlayer(requester), Bukkit.getPlayer(receiver),"teleport");
@@ -31,7 +35,10 @@ public abstract class ChannelMiscellaneous extends ChannelEconomy{
 	}
 	
 	public boolean requestInventorySharing(UUID receiver, UUID requester) {
-		if(receiver.equals(requester)) return false;
+		if(receiver.equals(requester)) {
+			Bukkit.getPlayer(receiver).sendMessage(ChatColor.YELLOW + "You cant share with yourself.");
+			return false;
+		}
 		if(Validator.isPlayerOnlineAndJoined(receiver,this.name) && Validator.isPlayerOnlineAndJoined(requester, this.name)) {
 			if(Validator.arePlayersSameChannel(receiver, requester)) {
 				ShortermRequest request = ShortermRequest.createRequest(Bukkit.getPlayer(requester), Bukkit.getPlayer(receiver),"inventory");

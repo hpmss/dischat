@@ -16,6 +16,7 @@ import hpms.discordchat.data.Role;
 import hpms.discordchat.inv.ChannelGUI;
 import hpms.discordchat.inv.InventoryLinker;
 import hpms.discordchat.utils.PendingInvitation;
+import hpms.discordchat.utils.Validator;
 import net.md_5.bungee.api.ChatColor;
 
 public class OnCommand implements CommandExecutor{
@@ -38,6 +39,7 @@ public class OnCommand implements CommandExecutor{
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat create <name> - Create a new channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat remove <name> - Remove a channel .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> - Join a channel .");
+				sender.sendMessage(ChatColor.YELLOW + "/discordchat join <name> <player_name> - Make a player join a channel ( Admin ) .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat joinaccept <name> <player> - Accept a player joining request ( leader required ) .");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat setrole <name> <playername> <role> - Set a channel's player role. ( leader required )");
 				sender.sendMessage(ChatColor.YELLOW + "/discordchat leaderprefix <name> <prefix> - Set a channel's leader prefix. (leader required) ");
@@ -113,8 +115,16 @@ public class OnCommand implements CommandExecutor{
 					Player receiver = Bukkit.getPlayer(args[1]);
 					if(receiver != null) {
 						if(p.hasPermission("dc.bypassrequest")) {
-							InventoryLinker.createInventoryLinker(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), receiver, p);
-							p.sendMessage(ChatColor.RED + "Admin Bypass: " + ChatColor.YELLOW + "You are now sharing inventory with " + ChatColor.WHITE + receiver.getName());
+							if(Validator.arePlayersSameChannel(p.getUniqueId(), receiver.getUniqueId())) {
+								if(p.getUniqueId().equals(receiver.getUniqueId())) {
+									p.sendMessage(ChatColor.RED + "Admin Bypass: " + ChatColor.YELLOW + "You cant share you with yourself.");
+								}else {
+									InventoryLinker.createInventoryLinker(ChannelAPI.getPlayerCurrentChannelName(p.getUniqueId()), receiver, p);
+									p.sendMessage(ChatColor.RED + "Admin Bypass: " + ChatColor.YELLOW + "You are now sharing inventory with " + ChatColor.WHITE + receiver.getName());
+								}
+							}else {
+								p.sendMessage(ChatColor.RED + "Admin Bypass: " + ChatColor.YELLOW + "You and the player must in the same channel.");
+							}
 						}else {
 							boolean b = ChannelAPI.getPlayerCurrentChannel(p.getUniqueId()).requestInventorySharing(receiver.getUniqueId(),p.getUniqueId());
 							if(b) {
@@ -168,6 +178,13 @@ public class OnCommand implements CommandExecutor{
 						if(channel != null) {
 							sender.sendMessage(ChatColor.AQUA + "\'" + args[1] + "\'" + ChatColor.YELLOW + " channel created.");
 						}
+					}
+				}
+				else if(args[0].equalsIgnoreCase("join")) {
+					if(sender.hasPermission("dc.bypassmakejoin")) {
+						ChannelAPI.joinChannel(Bukkit.getPlayer(args[2]).getUniqueId(), args[1]);
+					}else {
+						sender.sendMessage(ChatColor.YELLOW + "This command can only be used by admin.");
 					}
 				}
 				else if(args[0].equalsIgnoreCase("leader")) {

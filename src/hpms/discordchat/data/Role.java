@@ -199,6 +199,14 @@ public class Role extends RoleConstant{
 		return roleSection.getConfigurationSection(channel).getConfigurationSection(ROLE).getValues(false).containsKey(uuid.toString());
 	}
 	
+	public static ArrayList<UUID> getAllMembersFromChannel(String channel) {
+		ArrayList<UUID> list = new ArrayList<>();
+		for(String uuid : roleSection.getConfigurationSection(channel).getConfigurationSection(ROLE).getValues(false).keySet()) {
+			list.add(UUID.fromString(uuid));
+		}
+		return list;
+	}
+	
 	private static void overrideChannelRole(String name,String oldRole,String newRole) {
 		ConfigurationSection roleConfig = roleSection.getConfigurationSection(name).getConfigurationSection(ROLE);
 		for(Entry<String,Object> entry : roleConfig.getValues(false).entrySet()) {
@@ -218,6 +226,7 @@ public class Role extends RoleConstant{
 			channel.overrideMember(memberList);
 		}
 	}
+	
 	
 	public static void debug() {
 		Log.info("---Prefix---");

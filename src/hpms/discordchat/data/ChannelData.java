@@ -119,12 +119,17 @@ public class ChannelData extends ChannelDataConstant{
 		return "";
 	}
 	
+	/*
+	 * Add admin bypass permission
+	 * Force size to increase by one when full
+	 */
 	public static ErrorState setPlayerCurrentChannel(UUID player,String channel) {
 		if(!isChannelExisted(channel)) return ErrorState.NO_EXISTENCE;
 		String current = getPlayerCurrentChannel(player);
 		if(current.equalsIgnoreCase(channel)) return ErrorState.MATCHED;
 		ChannelCore newChannel = getChannel(channel);
 		boolean b = newChannel.addMember(player);
+		//Check here
 		if(!b) return ErrorState.OUT_OF_BOUND;
 		if(current.length() != 0) {
 			ChannelCore currentChannel = getChannel(current);

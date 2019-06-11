@@ -35,11 +35,6 @@ public interface ChannelUnit {
 	
 	boolean isPlayerAlreadyJoined(UUID uuid);
 	
-	
-	String getRole(UUID member);
-	
-	String getRolePrefix(String prefix);
-	
 	String getChannelChatPrefix();
 	
 	boolean setRole(UUID setter,UUID member,String prefix);

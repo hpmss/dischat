@@ -72,6 +72,10 @@ public class ChannelData extends ChannelDataConstant{
 		cachedLeader.add(leader);
 	}
 	
+	public static void removeLeader(String leader) {
+		cachedLeader.remove(leader);
+	}
+	
 	public static void remove(String name) {
 		ChannelCore channel = getChannel(name);
 		ChannelCore global = getChannel(DEFAULT_CHANNEL);
@@ -89,27 +93,31 @@ public class ChannelData extends ChannelDataConstant{
 		if(name.length() == 0) {
 			return null;
 		}
-		Validator.isTrue(isChannelExisted(name));
-		ChannelCore channel = cachedChannel.get(name);
-		if(channel != null) {
+		boolean val = Validator.isTrue(isChannelExisted(name),"Channel " + name +  " doesnt exist.");
+		if(val) {
+			ChannelCore channel = cachedChannel.get(name);
+			if(channel != null) {
+				return channel;
+			}
+			ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
+			UUID leader = null;
+			if(!name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+				leader = UUID.fromString(channelSection.getString(LEADER));
+			}
+			Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection(LIST).getValues(false);
+			int slot = channelSection.getInt(SLOT);
+			channel = new Channel(name, leader,true);
+			channel.setMaxSlot(slot);
+			channel.overrideMember(memberList);
+			if(name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
+				channel.setSlotLimit(false);
+			}
+			cacheChannel(channel);
 			return channel;
+		}else {
+			return null;
 		}
-		ConfigurationSection channelSection = storageSection.getConfigurationSection(name);
-		Validator.isNotNull(channelSection,"channel \'" + name + "\' doesnt exist.");
-		UUID leader = null;
-		if(!name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
-			leader = UUID.fromString(channelSection.getString(LEADER));
-		}
-		Map<String,Object> memberList = (Map<String, Object>) channelSection.getConfigurationSection(LIST).getValues(false);
-		int slot = channelSection.getInt(SLOT);
-		channel = new Channel(name, leader,true);
-		channel.setMaxSlot(slot);
-		channel.overrideMember(memberList);
-		if(name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
-			channel.setSlotLimit(false);
-		}
-		cacheChannel(channel);
-		return channel;
+		
 	}
 	
 	public static String getPlayerCurrentChannel(UUID uuid) {
@@ -119,18 +127,20 @@ public class ChannelData extends ChannelDataConstant{
 		return "";
 	}
 	
-	/*
-	 * Add admin bypass permission
-	 * Force size to increase by one when full
-	 */
-	public static ErrorState setPlayerCurrentChannel(UUID player,String channel) {
+	public static ErrorState setPlayerCurrentChannel(UUID player,String channel,boolean bypass) {
 		if(!isChannelExisted(channel)) return ErrorState.NO_EXISTENCE;
 		String current = getPlayerCurrentChannel(player);
 		if(current.equalsIgnoreCase(channel)) return ErrorState.MATCHED;
 		ChannelCore newChannel = getChannel(channel);
 		boolean b = newChannel.addMember(player);
-		//Check here
-		if(!b) return ErrorState.OUT_OF_BOUND;
+		if(!b) {
+			if(!bypass) {
+				return ErrorState.OUT_OF_BOUND;	
+			}else {
+				newChannel.setMaxSlot(newChannel.getMaxSize() + 1);
+				newChannel.addMember(player);
+			}
+		}
 		if(current.length() != 0) {
 			ChannelCore currentChannel = getChannel(current);
 			currentChannel.removeMember(player,false);

@@ -32,7 +32,7 @@ public abstract class ChannelBackendAPI {
 	
 	public abstract boolean setChannelPlayerRole(UUID setter,UUID member,String name,String rank);
 	
-	public abstract void joinChannel(UUID player,String channelName);
+	public abstract void joinChannel(UUID player,String channelName,boolean bypass);
 	
-	public abstract void removeChannel(String channelName);
+	public abstract boolean removeChannel(UUID setter,String channelName);
 }

@@ -54,11 +54,12 @@ public class Validator {
 		return false;
 	}
 	
-	public static boolean isTrue(boolean prep) {
+	public static boolean isTrue(boolean prep,String message) {
 		if(prep == true) {
 			return true;
 		}else {
-			throw new IllegalArgumentException("Proposition is false");
+			System.out.print(message);
+			return false;
 		}
 	}
 

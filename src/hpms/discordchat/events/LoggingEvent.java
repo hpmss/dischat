@@ -1,6 +1,5 @@
 package hpms.discordchat.events;
 
-import org.bukkit.craftbukkit.libs.jline.internal.Log;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -14,9 +13,8 @@ public class LoggingEvent implements Listener {
 	
 	@EventHandler
 	public void onPlayerJoinEvent(PlayerJoinEvent e) {
-		Log.info(e.getPlayer().getName());
 		if(ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId()) == null) {
-			ChannelAPI.joinChannel(e.getPlayer().getUniqueId(), ChannelData.DEFAULT_CHANNEL);
+			ChannelAPI.joinChannel(e.getPlayer().getUniqueId(), ChannelData.DEFAULT_CHANNEL,true);
 		}
 	}
 	

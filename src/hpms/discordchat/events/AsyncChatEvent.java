@@ -13,6 +13,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.channel.Channel;
 import hpms.discordchat.data.ChannelData;
+import hpms.discordchat.data.Role;
 
 public class AsyncChatEvent implements Listener{
 	
@@ -37,7 +38,7 @@ public class AsyncChatEvent implements Listener{
 		}
 		Channel channel = ChannelAPI.getPlayerCurrentChannel(e.getPlayer().getUniqueId());
 		String form = FORMAT.replace("<channelprefix>",ChatColor.translateAlternateColorCodes('&', channel.getChannelChatPrefix()));
-		form = form.replace("<chatprefix>", ChatColor.translateAlternateColorCodes('&', channel.getRolePrefix(channel.getRole(e.getPlayer().getUniqueId()))));
+		form = form.replace("<chatprefix>", ChatColor.translateAlternateColorCodes('&', Role.getRolePrefix(channel.getChannelName(), Role.getRoleFromPlayer(e.getPlayer().getUniqueId(), channel.getChannelName()))));
 		e.setFormat(form +  PLAYER_NAME + ": " + PLAYER_MESSAGE );
 	}
 	

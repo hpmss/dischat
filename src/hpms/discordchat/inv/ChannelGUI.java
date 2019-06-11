@@ -1,5 +1,7 @@
 package hpms.discordchat.inv;
 
+import java.util.ArrayList;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -44,11 +46,28 @@ public class ChannelGUI implements MenuUnit{
 		return false;
 	}
 	
-	//Make minSize automatically a multiple of 9
-	//Create multiple inventories if size is over 63
-	public static Inventory[] createSubInventorySize(int minSize) {
+	public static int logarithm(double num,double base) {
+		return (int)StrictMath.ceil(StrictMath.log(num)/StrictMath.log(base));
+	}
+	
+	public static ArrayList<Inventory> createSubInventory(int minSize,String channelName) {
 		int numInv = 0;
-		Inventory[] inv = new Inventory[numInv];
+		ArrayList<Inventory> inv = new ArrayList<Inventory>();
+		int expo = logarithm(minSize,3);
+		if(expo == 1) {
+			expo += 1;
+		}
+		double finalSize = StrictMath.pow(3, expo);
+		while(finalSize > 63) {
+			finalSize -= 63;
+			numInv += 1;
+		}
+		for(int i = 0; i < numInv;i++) {
+			inv.add(Bukkit.createInventory(null,63,ChatColor.RED +  channelName + " Member"));
+		}
+		
+		inv.add(Bukkit.createInventory(null, (int)finalSize,ChatColor.RED + channelName + " Member"));
+		
 		return inv;
 	}
 

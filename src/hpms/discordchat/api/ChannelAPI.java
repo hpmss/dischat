@@ -49,12 +49,12 @@ public class ChannelAPI {
 		return ChannelBackendAPI.getAPI().getPlayerCurrentChannelName(player);
 	}
 	
-	public static void joinChannel(UUID player,String channelName) {
-		ChannelBackendAPI.getAPI().joinChannel(player, channelName);
+	public static void joinChannel(UUID player,String channelName,boolean bypass) {
+		ChannelBackendAPI.getAPI().joinChannel(player, channelName,bypass);
 	}
 	
-	public static void removeChannel(String channelName) {
-		ChannelBackendAPI.getAPI().removeChannel(channelName);
+	public static boolean removeChannel(UUID setter,String channelName) {
+		return ChannelBackendAPI.getAPI().removeChannel(setter,channelName);
 	}
 	
 

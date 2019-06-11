@@ -12,15 +12,31 @@ commands:
          aliases: f
          description: Flush the chat.
          permission: discordchat.flush
-         
 permissions:
       discordchat.overridechannel:
          default: op
       discordchat.multiplechannel:
          default: op
+      dc.default:
+         default: op
+      dc.godsetrole:
+         default: op
+      dc.godsetroleprefix:
+         default: op
+      dc.godsetchannelprefix:
+         default: op
+      dc.godaddrole:
+         default: op
+      dc.godremoverole:
+         default: op
       discordchat.flush:
          default: op
       discordchat.commands:
-         default: op
+         default: true
       discordchat.bypassjoin:
          default: op
+      discordchat.sad:
+         default: true
+      discordchat.basiccommand:
+         default: true
+       

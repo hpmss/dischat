@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -21,6 +22,8 @@ public class ChannelGUIConstant {
 	private static Pattern r = Pattern.compile("&(?:[Aa-zZ]|[0-9])");
 	
 	private static ItemStack memberListItem = new ItemStack(Material.BOOK_AND_QUILL);
+	private static ItemStack memberListNextItem = new ItemStack(Material.PAPER);
+	private static ItemStack memberListPreviousItem = new ItemStack(Material.PAPER);
 	private static ItemStack upgradeSlotItem = new ItemStack(Material.CHEST);
 	private static ItemStack balanceItem = new ItemStack(Material.PAPER);
 	
@@ -29,6 +32,14 @@ public class ChannelGUIConstant {
 		ItemMeta memberListMeta = memberListItem.getItemMeta();
 		memberListMeta.setDisplayName(ChatColor.AQUA + "List of members");
 		memberListItem.setItemMeta(memberListMeta);
+		ItemMeta memberListNextMeta = memberListNextItem.getItemMeta();
+		memberListNextMeta.setDisplayName(ChatColor.YELLOW + "Next Page");
+		memberListNextMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+		memberListNextItem.setItemMeta(memberListNextMeta);
+		ItemMeta memberListPreviousMeta = memberListPreviousItem.getItemMeta(); 
+		memberListPreviousMeta.setDisplayName(ChatColor.YELLOW + "Previous Page");
+		memberListPreviousMeta.addEnchant(Enchantment.PROTECTION_ENVIRONMENTAL, 5, true);
+		memberListPreviousItem.setItemMeta(memberListPreviousMeta);
 		ItemMeta upgradeSlotMeta = upgradeSlotItem.getItemMeta();
 		upgradeSlotMeta.setDisplayName(ChatColor.AQUA + "Upgrade slot");
 		upgradeSlotItem.setItemMeta(upgradeSlotMeta);
@@ -65,6 +76,14 @@ public class ChannelGUIConstant {
 	
 	public static ItemStack getMemberListItem() {
 		return memberListItem;
+	}
+	
+	public static ItemStack getMemberListNextItem() {
+		return memberListNextItem;
+	}
+	
+	public static ItemStack getMemberListPreviousItem() {
+		return memberListPreviousItem;
 	}
 	
 	public static ItemStack getUpgradeSlotItem() {

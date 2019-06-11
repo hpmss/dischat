@@ -17,7 +17,10 @@ public abstract class ChannelRole extends ChannelCore{
 	}
 	
 	public boolean setRole(UUID setter,UUID member,String role) {
-		if(!Role.isRole(this.name, role)) return false;
+		if(!Role.isRole(this.name, role)) {
+			Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "This role doesnt exist.");
+			return false;
+		}
 		if(this.name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
 			if(Bukkit.getPlayer(setter).hasPermission("dc.default")) {
 				if(this.member.containsKey(member)) {
@@ -31,7 +34,10 @@ public abstract class ChannelRole extends ChannelCore{
 			}
 		}
 		else {
-			if(member.equals(this.leader)) return false;
+			if(member.equals(this.leader)) {
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "You are the leader so you cannot set yourself a role.");
+				return false;
+			}
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godsetrole"))  {
 				if(this.member.containsKey(member)) {
 					this.member.put(member,role);
@@ -39,6 +45,8 @@ public abstract class ChannelRole extends ChannelCore{
 				Role.update(this.name, member, role);
 				ChannelData.put(this);
 				return true;
+			}else {
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "You are the leader of this channel.");
 			}
 		}
 		return false;
@@ -55,7 +63,7 @@ public abstract class ChannelRole extends ChannelCore{
 		}else {
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godsetroleprefix")) {
 				return Role.setRolePrefix(this.name, role, prefix);
-			}
+			}else return ErrorState.FAIL;
 		}
 		return ErrorState.NULL;
 	}
@@ -73,7 +81,7 @@ public abstract class ChannelRole extends ChannelCore{
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godsetchannelprefix")) {
 				Role.setChannelChatPrefix(this.name, prefix);
 				return true;
-			}	
+			}else return false;
 		}
 		return false;
 	}
@@ -89,7 +97,7 @@ public abstract class ChannelRole extends ChannelCore{
 		else {
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godaddrole")) {
 				return Role.addRole(this.name, role,makeDefault);
-			}
+			}else return ErrorState.FAIL;
 		}
 		return ErrorState.NULL;
 	
@@ -106,20 +114,12 @@ public abstract class ChannelRole extends ChannelCore{
 		else {
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godremoverole")) {
 				return Role.removeRole(this.name, prefix);
-			}
+			}else return ErrorState.FAIL;
 		}
 		
 		return ErrorState.NULL;
 	}
-	
-	public String getRole(UUID member) {
-		return Role.getRoleFromPlayer(member, this.name);
-	}
-	
-	public String getRolePrefix(String prefix) {
-		return Role.getRolePrefix(this.name, prefix);
-	}
-	
+
 	public String getChannelChatPrefix() {
 		return Role.getChannelChatPrefix(this.name);
 	}

@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
+import hpms.discordchat.api.ChannelAPI;
 import hpms.discordchat.api.ChannelUnit;
 import hpms.discordchat.data.ChannelData;
 import hpms.discordchat.data.ChannelDataConstant;
@@ -22,6 +23,12 @@ public abstract class ChannelCore implements ChannelUnit{
 	protected int maxSlot = ChannelData.DEFAULT_SLOT;
 	protected boolean slotLimit = true;
 	
+	/**
+	 * 
+	 * @param getFlag - In case the channel was already created getFlag == false indicates that the channel is being freshly created.
+	 * 					While getFlag == true indicates that the channel should only be retrieved back to be cached not to be newly create.
+	 */
+	
 	public ChannelCore(String name,UUID leader,boolean getFlag) {
 		this.name = name;
 		this.member = new HashMap<UUID,String>();
@@ -29,8 +36,8 @@ public abstract class ChannelCore implements ChannelUnit{
 			this.leader = leader;
 			OfflinePlayer player = Bukkit.getOfflinePlayer(leader);
 			if(player.isOnline()) {
-				if(!player.getPlayer().hasPermission("discordchat.overridechannel")) {
-					Validator.isTrue(!ChannelData.isChannelExisted(name));
+				if(!player.getPlayer().hasPermission("discordchat.overridechannel") && getFlag == false) {
+					Validator.isTrue(!ChannelData.isChannelExisted(name),"Channel " + name + " already existed.");
 				}
 			}
 		}else {
@@ -99,6 +106,7 @@ public abstract class ChannelCore implements ChannelUnit{
 	public boolean removeMember(UUID uuid,boolean hard) {
 		if(hard) {
 			Role.removePlayer(this.name, uuid);
+			ChannelAPI.joinChannel(uuid, ChannelDataConstant.DEFAULT_CHANNEL, true);
 		}
 		if(this.member.containsKey(uuid)) {
 			this.member.remove(uuid);
@@ -114,12 +122,21 @@ public abstract class ChannelCore implements ChannelUnit{
 		ChannelData.put(this);
 	}
 	
-	public void setLeader(UUID leader) {
+	public void setLeader(UUID newLeader) {
 		if(!this.name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
-			Role.update(this.name, this.leader, Role.getInitialRole(this.name));
-			this.leader = leader;
+			String leaderPrefix = Role.getLeaderPrefix(this.name);
+			String initRole = Role.getInitialRole(this.name);
+			Role.update(this.name, this.leader, initRole);
+			this.member.put(this.leader, initRole);
+			ChannelData.removeLeader(this.leader.toString());
+			this.leader = newLeader;
+			ChannelData.cacheLeader(this.leader.toString());
+			if(this.member.containsKey(this.leader)) {
+				this.member.put(this.leader, leaderPrefix);
+			}
 			ChannelData.put(this);
-			Role.update(this.name, this.leader, Role.getLeaderPrefix(this.name));
+			Role.update(this.name, this.leader, leaderPrefix);
+	
 		}
 	}
 	

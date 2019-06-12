@@ -1,7 +1,5 @@
 package hpms.discordchat.inv;
 
-import java.util.ArrayList;
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -50,25 +48,37 @@ public class ChannelGUI implements MenuUnit{
 		return (int)StrictMath.ceil(StrictMath.log(num)/StrictMath.log(base));
 	}
 	
-	public static ArrayList<Inventory> createSubInventory(int minSize,String channelName) {
-		int numInv = 0;
-		ArrayList<Inventory> inv = new ArrayList<Inventory>();
+	public static Object[] createSubInventory(int minSize,String channelName) {
+		Object[] triplet = new Object[5];
+		int overFlow = 0;
+		Inventory inv;
 		int expo = logarithm(minSize,3);
-		if(expo == 1) {
-			expo += 1;
+		if(expo == 1 || expo == 0) {
+			expo = 2;
 		}
 		double finalSize = StrictMath.pow(3, expo);
-		while(finalSize > 63) {
-			finalSize -= 63;
-			numInv += 1;
+		while(finalSize > minSize) {
+			finalSize -= 54;
+			if(finalSize < minSize) {
+				finalSize += 54;
+				break;
+			}
 		}
-		for(int i = 0; i < numInv;i++) {
-			inv.add(Bukkit.createInventory(null,63,ChatColor.RED +  channelName + " Member"));
+		while(finalSize > 54) {
+			finalSize -= 54;
+			overFlow++;
 		}
-		
-		inv.add(Bukkit.createInventory(null, (int)finalSize,ChatColor.RED + channelName + " Member"));
-		
-		return inv;
+		if(overFlow > 0) {
+			inv = Bukkit.createInventory(null, (int)54,ChatColor.RED + channelName + " Member");
+		}else {
+			inv = Bukkit.createInventory(null, (int)finalSize,ChatColor.RED + channelName + " Member");
+		}
+		triplet[0] = inv;
+		triplet[1] = overFlow;
+		triplet[2] = 0;
+		triplet[3] = 0;
+		triplet[4] = 0;
+		return triplet;
 	}
 
 

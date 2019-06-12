@@ -18,7 +18,7 @@ public abstract class ChannelRole extends ChannelCore{
 	
 	public boolean setRole(UUID setter,UUID member,String role) {
 		if(!Role.isRole(this.name, role)) {
-			Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "This role doesnt exist.");
+			Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "Vài trò này không tồn tại.");
 			return false;
 		}
 		if(this.name.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
@@ -30,12 +30,12 @@ public abstract class ChannelRole extends ChannelCore{
 				ChannelData.put(this);
 				return true;
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Default channel can only be operated by admin.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Kênh mặc định chỉ có thể được vận hành bởi Admin.");
 			}
 		}
 		else {
 			if(member.equals(this.leader)) {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "You are the leader so you cannot set yourself a role.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "Bạn là chủ kênh nên bạn không thể đặt cho bản thân một vai trò.");
 				return false;
 			}
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godsetrole"))  {
@@ -46,7 +46,7 @@ public abstract class ChannelRole extends ChannelCore{
 				ChannelData.put(this);
 				return true;
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "You are the leader of this channel.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.YELLOW + "Bạn không phải là chủ kênh này.");
 			}
 		}
 		return false;
@@ -58,7 +58,7 @@ public abstract class ChannelRole extends ChannelCore{
 			if(Bukkit.getPlayer(setter).hasPermission("dc.default")) {
 				return Role.setRolePrefix(this.name, role, prefix);
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Default channel can only be operated by admin.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Kênh mặc định chỉ có thể được vận hành bởi Admin.");
 			}
 		}else {
 			if(setter.equals(this.leader) || Bukkit.getPlayer(setter).hasPermission("dc.godsetroleprefix")) {
@@ -74,7 +74,7 @@ public abstract class ChannelRole extends ChannelCore{
 				Role.setChannelChatPrefix(this.name, prefix);
 				return true;
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Default channel can only be operated by admin.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Kênh mặc định chỉ có thể được vận hành bởi Admin.");
 			}
 		}
 		else {
@@ -91,7 +91,7 @@ public abstract class ChannelRole extends ChannelCore{
 			if(Bukkit.getPlayer(setter).hasPermission("dc.default")) {
 				return Role.addRole(this.name, role,makeDefault);
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Default channel can only be operated by admin.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Kênh mặc định chỉ có thể được vận hành bởi Admin.");
 			}
 		}
 		else {
@@ -108,7 +108,7 @@ public abstract class ChannelRole extends ChannelCore{
 			if(Bukkit.getPlayer(setter).hasPermission("dc.default")) {
 				return Role.removeRole(this.name, prefix);
 			}else {
-				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Default channel can only be operated by admin.");
+				Bukkit.getPlayer(setter).sendMessage(ChatColor.RED + "Kênh mặc định chỉ có thể được vận hành bởi Admin.");
 			}
 		}
 		else {

@@ -29,7 +29,7 @@ public class ChannelBackend extends ChannelBackendAPI {
 				ChannelData.cacheChannel(channel);
 				return null;
 			}else {
-				Bukkit.getPlayer(leader).sendMessage(ChatColor.RED + "You are not allowed to create default channel.");
+				Bukkit.getPlayer(leader).sendMessage(ChatColor.RED + "Bạn không được quyền tạo kênh mặc định.");
 				return null;
 			}
 		}else {
@@ -37,7 +37,7 @@ public class ChannelBackend extends ChannelBackendAPI {
 			if(ChannelData.isPlayerLeader(leader))  {
 				if(player.isOnline()) {
 					if(!player.getPlayer().hasPermission("discordchat.multiplechannel")) {
-						player.getPlayer().sendMessage(ChatColor.YELLOW + "You are already a leader of channel.");
+						player.getPlayer().sendMessage(ChatColor.YELLOW + "Bạn đã đang là một chủ của kênh khác.");
 						return null;
 					}
 				}
@@ -83,18 +83,18 @@ public class ChannelBackend extends ChannelBackendAPI {
 			Player player = Bukkit.getPlayer(playerUID);
 			switch(state) {
 			case MATCHED:
-				player.sendMessage(ChatColor.YELLOW + "You are already in \'" + ChatColor.AQUA +channel + ChatColor.YELLOW + "\' channel .");
+				player.sendMessage(ChatColor.YELLOW + "Bạn hiện tại đã đang ở trong kênh:  \'" + ChatColor.AQUA +channel +  "\'");
 				break;
 			case NO_EXISTENCE:
-				player.sendMessage(ChatColor.YELLOW + "Channel \'" + ChatColor.AQUA + channel +ChatColor.YELLOW + "\' doesnt exist .");
+				player.sendMessage(ChatColor.YELLOW + "Kênh không tồn tại: \'" + ChatColor.AQUA);
 				break;
 			case SUCCESS:
 				if(!channel.equalsIgnoreCase(ChannelDataConstant.DEFAULT_CHANNEL)) {
-					player.sendMessage(ChatColor.AQUA + "\'" + channel + "\'" + ChatColor.YELLOW + " channel joined.");
+					player.sendMessage(ChatColor.YELLOW + "Đã tham gia vào kênh: " + ChatColor.AQUA + "\'" + channel + "\'");
 				}
 				break;
 			case OUT_OF_BOUND:
-				player.sendMessage(ChatColor.YELLOW + "Channel reached maximum size.");
+				player.sendMessage(ChatColor.YELLOW + "Kênh đã đầy.");
 				break;
 			default:
 				break;
